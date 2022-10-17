@@ -112,6 +112,7 @@ Renderer::Renderer(): mEglContext(eglGetCurrentContext()), mProgram(0), mVBState
 }
 
 bool Renderer::init() {
+    glClearColor(1.f, 0.2f, 0.3f, 1.0f);
     mProgram = createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
     if (!mProgram)
         return false;
@@ -235,7 +236,6 @@ void Renderer::step() {
 
 void Renderer::render() {
     step();
-    glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     draw(mNumInstances);
     checkGlError("Renderer::render");
