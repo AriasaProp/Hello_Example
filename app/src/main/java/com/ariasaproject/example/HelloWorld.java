@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.widget.TextView;
 
 public class HelloWorld extends Activity {
+	static {
+		System.loadLibrary("ext");
+	}
 	@Override
 	public void onCreate(Bundle b) {
 		super.onCreate(b);
