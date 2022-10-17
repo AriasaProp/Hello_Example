@@ -12,6 +12,7 @@
 #else
 #include <GLES3/gl3.h>
 #endif
+#include <EGL/egl.h>
 
 #define DEBUG 1
 
@@ -79,7 +80,6 @@ class Renderer {
 		    GLuint mVBState;
 };
 
-#include <EGL/egl.h>
 #define STR(s) #s
 #define POS_ATTRIB 0
 #define COLOR_ATTRIB 1
