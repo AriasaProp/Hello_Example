@@ -1,7 +1,7 @@
 #include <jni.h>
 
 
-extern "C" jstring Java_com_ariasaproject_example_HelloWorld_helloJNI(JNIEnv *e, jclass clazz)
+extern "C" JNIEXPORT jstring JNICALL Java_com_ariasaproject_example_HelloWorld_helloJNI(JNIEnv *e, jclass clazz)
 {
 		return e->NewStringUTF("Hello there, i'm from native c++!");
 }

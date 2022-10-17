@@ -12,7 +12,7 @@ public class HelloWorld extends Activity {
 		((TextView)findViewById(R.id.text2)).setText(helloJNI());
 	}
 	
-	public static final native String helloJNI();
+	public static native final String helloJNI();
 }
 
 
