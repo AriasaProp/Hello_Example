@@ -16,6 +16,6 @@ add_library(${PROJECT_NAME} SHARED ${Src_Files})
 
 target_include_directories(${PROJECT_NAME} PRIVATE ${ANDROID_NDK}/sources/android/native_app_glue)
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-set_target_link_libraries(${PROJECT_NAME} android native_app_glue EGL GLESv1_CM log)
+target_link_libraries(${PROJECT_NAME} android native_app_glue EGL GLESv1_CM log)
 
 
