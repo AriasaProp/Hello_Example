@@ -61,6 +61,14 @@ class Renderer {
 		    float mAngles[MAX_INSTANCES];
 };
 
+
+const Vertex QUAD[4] = {
+    {{-0.7f, -0.7f}, {0x00, 0xFF, 0x00 }},
+    {{0.7f, -0.7f}, {0x00, 0x00, 0xFF }},
+    {{-0.7f, 0.7f}, {0xFF, 0x00, 0x00}},
+    {{0.7f, 0.7f}, {0xFF, 0xFF, 0xFF}}
+};
+
 #include <EGL/egl.h>
 #define STR(s) #s
 #define POS_ATTRIB 0
@@ -162,7 +170,7 @@ bool RendererES3::init() {
     glEnableVertexAttribArray(OFFSET_ATTRIB);
     glVertexAttribDivisor(OFFSET_ATTRIB, 1);
 
-    ALOGV("Using OpenGL ES 3.0 renderer");
+    ALOGV("Using OpenGL ES 3.0 renderer");
     return true;
 }
 
@@ -201,13 +209,6 @@ void RendererES3::draw(unsigned int numInstances) {
     glBindVertexArray(mVBState);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numInstances);
 }
-
-static const Vertex QUAD[4] = {
-    {{-0.7f, -0.7f}, {0x00, 0xFF, 0x00 }},
-    {{0.7f, -0.7f}, {0x00, 0x00, 0xFF }},
-    {{-0.7f, 0.7f}, {0xFF, 0x00, 0x00}},
-    {{0.7f, 0.7f}, {0xFF, 0xFF, 0xFF}}
-};
 
 bool checkGlError(const char * funcName) {
     GLint err = glGetError();
