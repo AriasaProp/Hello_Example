@@ -47,37 +47,32 @@ extern GLuint createProgram(const char *, const char *);
 
 
 class Renderer {
-    public:
-        Renderer();
-        bool init();
-        virtual~Renderer();
-		    void resize(int w, int h);
-		    void render();
-		    virtual float *mapOffsetBuf();
-		    virtual void unmapOffsetBuf();
-		    virtual float *mapTransformBuf();
-		    virtual void unmapTransformBuf();
-		    virtual void draw(unsigned int numInstances);
+public:
+    Renderer();
+    bool init();
+    ~Renderer();
+    void resize(int w, int h);
+    void render();
+    float *mapOffsetBuf();
+    void unmapOffsetBuf();
+    float *mapTransformBuf();
+    void unmapTransformBuf();
+    void draw(unsigned int numInstances);
 
-    private:
-    		enum {
-				    VB_INSTANCE,
-				    VB_SCALEROT,
-				    VB_OFFSET,
-				    VB_COUNT
-				};
-        void calcSceneParams(unsigned int w, unsigned int h, float * offsets);
-		    void step();
-		    unsigned int mNumInstances;
-		    float mScale[2];
-		    float mAngularVelocity[MAX_INSTANCES];
-		    uint64_t mLastFrameNs;
-		    float mAngles[MAX_INSTANCES];
-		    
-		    const EGLContext mEglContext;
-		    GLuint mProgram;
-		    GLuint mVB[VB_COUNT];
-		    GLuint mVBState;
+private:
+		enum {VB_INSTANCE, VB_SCALEROT, VB_OFFSET, VB_COUNT};
+    void calcSceneParams(unsigned int w, unsigned int h, float * offsets);
+    void step();
+    unsigned int mNumInstances;
+    float mScale[2];
+    float mAngularVelocity[MAX_INSTANCES];
+    uint64_t mLastFrameNs;
+    float mAngles[MAX_INSTANCES];
+    
+    const EGLContext mEglContext;
+    GLuint mProgram;
+    GLuint mVB[VB_COUNT];
+    GLuint mVBState;
 };
 
 #define STR(s) #s
@@ -249,7 +244,7 @@ void Renderer::render() {
 
 float *Renderer::mapOffsetBuf() {
     glBindBuffer(GL_ARRAY_BUFFER, mVB[VB_OFFSET]);
-    return (float * ) glMapBufferRange(GL_ARRAY_BUFFER,
+    return (float *) glMapBufferRange(GL_ARRAY_BUFFER,
         0, MAX_INSTANCES * 2 * sizeof(float),
         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 }
@@ -260,7 +255,7 @@ void Renderer::unmapOffsetBuf() {
 
 float *Renderer::mapTransformBuf() {
     glBindBuffer(GL_ARRAY_BUFFER, mVB[VB_SCALEROT]);
-    return (float * ) glMapBufferRange(GL_ARRAY_BUFFER,
+    return (float *) glMapBufferRange(GL_ARRAY_BUFFER,
         0, MAX_INSTANCES * 4 * sizeof(float),
         GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
 }
@@ -270,12 +265,14 @@ void Renderer::unmapTransformBuf() {
 }
 
 void Renderer::draw(unsigned int numInstances) {
+		glClear(GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
+		glClearColor(1f, 0, 0, 1f);
     glUseProgram(mProgram);
     glBindVertexArray(mVBState);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numInstances);
 }
 
-bool checkGlError(const char * funcName) {
+bool checkGlError(const char *funcName) {
     GLint err = glGetError();
     if (err != GL_NO_ERROR) {
         ALOGE("GL error after %s(): 0x%08x\n", funcName, err);
