@@ -38,8 +38,8 @@ public class HelloWorld extends Activity {
         public void onSurfaceChanged(GL10 gl, int width, int height) {
             //resize(width, height);
         }
-        public void onSurfaceCreated(GL10 gl, EGLConfig config) 
-  					gl.glClearColor(1, 0,1,1);
+        public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+  					gl.glClearColor(1, 0, 1, 1);
             //init();
         }
         public void onDrawFrame(GL10 gl) {
