@@ -202,7 +202,7 @@ void RendererES3::draw(unsigned int numInstances) {
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numInstances);
 }
 
-extern const Vertex QUAD[4] = {
+static const Vertex QUAD[4] = {
     {{-0.7f, -0.7f}, {0x00, 0xFF, 0x00 }},
     {{0.7f, -0.7f}, {0x00, 0x00, 0xFF }},
     {{-0.7f, 0.7f}, {0xFF, 0x00, 0x00}},
