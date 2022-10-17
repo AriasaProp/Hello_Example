@@ -15,6 +15,7 @@
 
 #define DEBUG 1
 
+#include <android/log.h>
 #define LOG_TAG "GLES3JNI"
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #if DEBUG
@@ -51,28 +52,29 @@ public:
     Renderer();
     bool init();
     ~Renderer();
-    void resize(int w, int h);
+    void resize(int, int);
     void render();
     float *mapOffsetBuf();
     void unmapOffsetBuf();
     float *mapTransformBuf();
     void unmapTransformBuf();
-    void draw(unsigned int numInstances);
+    void draw(unsigned int);
 
 private:
 		enum {VB_INSTANCE, VB_SCALEROT, VB_OFFSET, VB_COUNT};
-    void calcSceneParams(unsigned int w, unsigned int h, float * offsets);
+    
+    const EGLContext mEglContext;
+    GLuint mProgram;
+    GLuint mVB[VB_COUNT];
+    GLuint mVBState;
+    
+    void calcSceneParams(unsigned int, unsigned int, float *);
     void step();
     unsigned int mNumInstances;
     float mScale[2];
     float mAngularVelocity[MAX_INSTANCES];
     uint64_t mLastFrameNs;
     float mAngles[MAX_INSTANCES];
-    
-    const EGLContext mEglContext;
-    GLuint mProgram;
-    GLuint mVB[VB_COUNT];
-    GLuint mVBState;
 };
 
 #define STR(s) #s
@@ -102,12 +104,12 @@ static const char FRAGMENT_SHADER[] =
 		"    outColor=vColor;\n"
 		"}\n";
 
-Renderer::Renderer(): mEglContext(eglGetCurrentContext()), mProgram(0), mVBState(0) {
+Renderer::Renderer(): mProgram(0), mVBState(0) {
+		mEglContext = eglGetCurrentContext();
 		memset(mScale, 0, sizeof(mScale));
 		memset(mAngularVelocity, 0, sizeof(mAngularVelocity));
 		memset(mAngles, 0, sizeof(mAngles));
-    for (unsigned int i = 0; i < VB_COUNT; i++)
-        mVB[i] = 0;
+		memset(mVB, 0, sizeof(mVB));
 }
 
 bool Renderer::init() {

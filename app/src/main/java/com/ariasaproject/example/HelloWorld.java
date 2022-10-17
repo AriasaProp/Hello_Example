@@ -39,11 +39,11 @@ public class HelloWorld extends Activity {
             resize(width, height);
         }
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-        		gl.glClearColor(1, 0, 0, 1);
-        		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+        		gl.glClearColor(1, 1, 0, 1);
             init();
         }
         public void onDrawFrame(GL10 gl) {
+        		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
             step();
         }
     }
