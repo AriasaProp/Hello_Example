@@ -263,12 +263,6 @@ ASensorManager* AcquireASensorManagerInstance(android_app* app) {
   return getInstanceFunc();
 }
 
-
-/**
- * This is the main entry point of a native application that is using
- * android_native_app_glue.  It runs in its own thread, with its own
- * event loop for receiving input events and doing other things.
- */
 void android_main(struct android_app* state) {
     struct engine engine{};
 
@@ -344,5 +338,4 @@ void android_main(struct android_app* state) {
             engine_draw_frame(&engine);
         }
     }
-}
-//END_INCLUDE(all)
+} 
