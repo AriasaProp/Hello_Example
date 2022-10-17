@@ -24,9 +24,9 @@
 #endif
 
 #define MAX_INSTANCES_PER_SIDE 16
-#define MAX_INSTANCES(MAX_INSTANCES_PER_SIDE * MAX_INSTANCES_PER_SIDE)
-#define TWO_PI(2.0 * M_PI)
-#define MAX_ROT_SPEED(0.3 * TWO_PI)
+#define MAX_INSTANCES (MAX_INSTANCES_PER_SIDE * MAX_INSTANCES_PER_SIDE)
+#define TWO_PI (2.0 * M_PI)
+#define MAX_ROT_SPEED (0.3 * TWO_PI)
 
 struct Vertex {
     GLfloat pos[2];
@@ -61,7 +61,6 @@ class Renderer {
 		    float mAngles[MAX_INSTANCES];
 };
 
-
 #include <EGL/egl.h>
 #define STR(s) #s
 #define STRV(s) STR(s)
@@ -76,10 +75,10 @@ static const char VERTEX_SHADER[] =
 		"layout(location="STRV(SCALEROT_ATTRIB)") in vec4 scaleRot;\n"
 		"layout(location="STRV(OFFSET_ATTRIB)") in vec2 offset;\n"
 		"out vec4 vColor;\n"
-		"void main() {\n"
-		"    mat2 sr = mat2(scaleRot.xy, scaleRot.zw);\n"
-		"    gl_Position = vec4(sr * pos + offset, 0.0, 1.0);\n"
-		"    vColor = color;\n"
+		"void main(){\n"
+		"    mat2 sr=mat2(scaleRot.xy, scaleRot.zw);\n"
+		"    gl_Position=vec4(sr * pos + offset, 0.0, 1.0);\n"
+		"    vColor=color;\n"
 		"}\n";
 
 static const char FRAGMENT_SHADER[] =
@@ -330,7 +329,7 @@ void Renderer::resize(int w, int h) {
 
 void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
     const float NCELLS_MAJOR = MAX_INSTANCES_PER_SIDE;
-    const float CELL_SIZE = 2.0 f / NCELLS_MAJOR;
+    const float CELL_SIZE = 2.0f / NCELLS_MAJOR;
     const float dim[2] = {
         fmaxf(w, h),
         fminf(w, h)
@@ -340,7 +339,7 @@ void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
         dim[1] / dim[0]
     };
     const float scene2clip[2] = {
-        1.0 f,
+        1.0f,
         aspect[0]
     };
     const int ncells[2] = {
@@ -352,7 +351,7 @@ void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
     for (int d = 0; d < 2; d++) {
         auto offset = -ncells[d] / NCELLS_MAJOR; // -1.0 for d=0 
         for (auto i = 0; i < ncells[d]; i++) {
-            centers[d][i] = scene2clip[d] * (CELL_SIZE * (i + 0.5 f) + offset);
+            centers[d][i] = scene2clip[d] * (CELL_SIZE * (i + 0.5f) + offset);
         }
     }
 
@@ -367,8 +366,8 @@ void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
     }
 
     mNumInstances = ncells[0] * ncells[1];
-    mScale[major] = 0.5 f * CELL_SIZE * scene2clip[0];
-    mScale[minor] = 0.5 f * CELL_SIZE * scene2clip[1];
+    mScale[major] = 0.5f * CELL_SIZE * scene2clip[0];
+    mScale[minor] = 0.5f * CELL_SIZE * scene2clip[1];
 }
 
 void Renderer::step() {
@@ -377,7 +376,7 @@ void Renderer::step() {
     auto nowNs = now.tv_sec * 1000000000 ull + now.tv_nsec;
 
     if (mLastFrameNs > 0) {
-        float dt = float(nowNs - mLastFrameNs) * 0.000000001 f;
+        float dt = float(nowNs - mLastFrameNs) * 0.000000001f;
 
         for (unsigned int i = 0; i < mNumInstances; i++) {
             mAngles[i] += mAngularVelocity[i] * dt;
@@ -405,7 +404,7 @@ void Renderer::step() {
 
 void Renderer::render() {
     step();
-    glClearColor(0.2 f, 0.2 f, 0.3 f, 1.0 f);
+    glClearColor(0.2f, 0.2f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     draw(mNumInstances);
     checkGlError("Renderer::render");
