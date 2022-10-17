@@ -13,5 +13,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
 add_library(${PROJECT_NAME} SHARED ${Src_Files})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
+# include external libraries from ndk extras
+target_link_libraries(${PROJECT_NAME} GLESv3 android EGL log m)
 

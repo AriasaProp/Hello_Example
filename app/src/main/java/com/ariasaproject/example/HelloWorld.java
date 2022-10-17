@@ -1,21 +1,52 @@
 package com.ariasaproject.example;
 
+    
+import android.content.Context;
+import android.graphics.PixelFormat;
+import android.opengl.GLSurfaceView;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
+
+import javax.microedition.khronos.egl.EGL10;
+import javax.microedition.khronos.egl.EGLConfig;
+import javax.microedition.khronos.egl.EGLContext;
+import javax.microedition.khronos.egl.EGLDisplay;
+import javax.microedition.khronos.opengles.GL10;
+
+
 import android.app.Activity;
 import android.os.Bundle;
 import android.widget.TextView;
 
 public class HelloWorld extends Activity {
-	static {
-		System.loadLibrary("ext");
-	}
-	@Override
-	public void onCreate(Bundle b) {
-		super.onCreate(b);
-		setContentView(R.layout.activity_main);
-		((TextView)findViewById(R.id.text2)).setText(helloJNI());
-	}
-	
-	public static native final String helloJNI();
+    static {
+        System.loadLibrary("ext");
+    }
+
+    @Override
+    public void onCreate(Bundle b) {
+        super.onCreate(b);
+        GLSurfaceView view = new GLSurfaceView(getContext());
+				setContentView(view);
+	      view.setEGLConfigChooser(8, 8, 8, 0, 16, 0);
+	      view.setEGLContextClientVersion(3);
+	      view.setRenderer(new Renderer());
+    }
+    private static class Renderer implements GLSurfaceView.Renderer {
+        public void onSurfaceChanged(GL10 gl, int width, int height) {
+            resize(width, height);
+        }
+        public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+            init();
+        }
+        public void onDrawFrame(GL10 gl) {
+            step();
+        }
+    }
+    
+    public static native final void init();
+    public static native final void resize(int w, int h);
+    public static native final void step();
 }
-
-
