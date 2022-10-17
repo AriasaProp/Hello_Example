@@ -63,17 +63,16 @@ class Renderer {
 
 #include <EGL/egl.h>
 #define STR(s) #s
-#define STRV(s) STR(s)
 #define POS_ATTRIB 0
 #define COLOR_ATTRIB 1
 #define SCALEROT_ATTRIB 2
 #define OFFSET_ATTRIB 3
 static const char VERTEX_SHADER[] =
 		"#version 300 es\n"
-		"layout(location="STRV(POS_ATTRIB)") in vec2 pos;\n"
-		"layout(location="STRV(COLOR_ATTRIB)") in vec4 color;\n"
-		"layout(location="STRV(SCALEROT_ATTRIB)") in vec4 scaleRot;\n"
-		"layout(location="STRV(OFFSET_ATTRIB)") in vec2 offset;\n"
+		"layout(location=" STR(POS_ATTRIB) ") in vec2 pos;\n"
+		"layout(location=" STR(COLOR_ATTRIB) ") in vec4 color;\n"
+		"layout(location=" STR(SCALEROT_ATTRIB) ") in vec4 scaleRot;\n"
+		"layout(location=" STR(OFFSET_ATTRIB) ") in vec2 offset;\n"
 		"out vec4 vColor;\n"
 		"void main(){\n"
 		"    mat2 sr=mat2(scaleRot.xy, scaleRot.zw);\n"
@@ -373,7 +372,7 @@ void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
 void Renderer::step() {
     timespec now;
     clock_gettime(CLOCK_MONOTONIC, & now);
-    auto nowNs = now.tv_sec * 1000000000 ull + now.tv_nsec;
+    auto nowNs = now.tv_sec * 1000000000ull + now.tv_nsec;
 
     if (mLastFrameNs > 0) {
         float dt = float(nowNs - mLastFrameNs) * 0.000000001f;
@@ -425,7 +424,7 @@ JEx(void, init)(JNIEnv *env, jobject obj) {
     printGlString("Extensions", GL_EXTENSIONS);
 
     const char * versionStr = (const char * ) glGetString(GL_VERSION);
-    if (strstr(versionStr, "OpenGL ES 3.") && gl3stubInit()) {
+    if (strstr(versionStr, "OpenGL ES 3.")) {
         g_renderer = createES3Renderer();
     } else {
         ALOGE("Unsupported OpenGL ES version");
