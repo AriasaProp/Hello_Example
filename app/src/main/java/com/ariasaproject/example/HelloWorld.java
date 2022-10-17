@@ -36,17 +36,20 @@ public class HelloWorld extends Activity {
     }
     private static class Renderer implements GLSurfaceView.Renderer {
         public void onSurfaceChanged(GL10 gl, int width, int height) {
-            resize(width, height);
+            //resize(width, height);
         }
-        public void onSurfaceCreated(GL10 gl, EGLConfig config) {
-            init();
+        public void onSurfaceCreated(GL10 gl, EGLConfig config) 
+  					gl.glClearColor(1, 0,1,1);
+            //init();
         }
         public void onDrawFrame(GL10 gl) {
-            step();
+        		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+            //step();
         }
     }
     
     public static native final void init();
     public static native final void resize(int w, int h);
     public static native final void step();
+    
 }
