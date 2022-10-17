@@ -104,9 +104,8 @@ static const char FRAGMENT_SHADER[] =
 		"    outColor=vColor;\n"
 		"}\n";
 
-Renderer::Renderer(): mProgram(0), mVBState(0) {
-		mEglContext = eglGetCurrentContext();
-		memset(mScale, 0, sizeof(mScale));
+Renderer::Renderer(): mEglContext(eglGetCurrentContext()), mProgram(0), mVBState(0) {
+		 memset(mScale, 0, sizeof(mScale));
 		memset(mAngularVelocity, 0, sizeof(mAngularVelocity));
 		memset(mAngles, 0, sizeof(mAngles));
 		memset(mVB, 0, sizeof(mVB));
@@ -179,7 +178,7 @@ void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
         aspect[0]
     };
     const int ncells[2] = {
-        static_cast < int > (NCELLS_MAJOR),
+        static_cast<int>(NCELLS_MAJOR),
         (int) floorf(NCELLS_MAJOR * aspect[1])
     };
 
@@ -200,7 +199,6 @@ void Renderer::calcSceneParams(unsigned int w, unsigned int h, float *offsets) {
             offsets[2 * idx + minor] = centers[1][j];
         }
     }
-
     mNumInstances = ncells[0] * ncells[1];
     mScale[major] = 0.5f * CELL_SIZE * scene2clip[0];
     mScale[minor] = 0.5f * CELL_SIZE * scene2clip[1];
