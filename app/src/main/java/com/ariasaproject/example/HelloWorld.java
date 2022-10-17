@@ -28,7 +28,7 @@ public class HelloWorld extends Activity {
     @Override
     public void onCreate(Bundle b) {
         super.onCreate(b);
-        GLSurfaceView view = new GLSurfaceView(getContext());
+        GLSurfaceView view = new GLSurfaceView(getApplicationContext());
 				setContentView(view);
 	      view.setEGLConfigChooser(8, 8, 8, 0, 16, 0);
 	      view.setEGLContextClientVersion(3);
