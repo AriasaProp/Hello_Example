@@ -28,8 +28,8 @@ public class HelloWorld extends Activity {
     @Override
     public void onCreate(Bundle b) {
         super.onCreate(b);
-        GLSurfaceView view = new GLSurfaceView(getApplicationContext());
-				setContentView(view);
+				setContentView(R.layout.activity_main);
+        GLSurfaceView view = findViewById(R.id.glSurfaceView);
 	      view.setEGLConfigChooser(8, 8, 8, 0, 16, 0);
 	      view.setEGLContextClientVersion(3);
 	      view.setRenderer(new Renderer());
@@ -39,6 +39,8 @@ public class HelloWorld extends Activity {
             resize(width, height);
         }
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+        		gl.glClearColor(1, 0, 0, 1);
+        		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
             init();
         }
         public void onDrawFrame(GL10 gl) {

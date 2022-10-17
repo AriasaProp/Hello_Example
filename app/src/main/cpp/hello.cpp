@@ -2,7 +2,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <time.h>
-#include <android/log.h>
 #include <cmath>
 
 #if __ANDROID_API__ >= 24
@@ -26,8 +25,10 @@
 
 #define MAX_INSTANCES_PER_SIDE 16
 #define MAX_INSTANCES (MAX_INSTANCES_PER_SIDE * MAX_INSTANCES_PER_SIDE)
-#define TWO_PI (2.0 * M_PI)
-#define MAX_ROT_SPEED (0.3 * TWO_PI)
+// 2π of rotation
+#define TWO_PI 6.283185307179586476925286766559005768394338798750211641949889184615632812572417997256069650684234136
+// 30% of rotation
+#define MAX_ROT_SPEED 1.884955592153875943077586029967701730518301639625063492584966755384689843771725399176820895205270241
 
 struct Vertex {
     GLfloat pos[2];
@@ -44,7 +45,6 @@ const Vertex QUAD[4] = {
 extern bool checkGlError(const char *);
 extern GLuint createShader(GLenum, const char *);
 extern GLuint createProgram(const char *, const char *);
-
 
 class Renderer {
 public:
