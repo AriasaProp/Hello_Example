@@ -266,7 +266,7 @@ void Renderer::unmapTransformBuf() {
 
 void Renderer::draw(unsigned int numInstances) {
 		glClear(GL_DEPTH_BUFFER_BIT|GL_STENCIL_BUFFER_BIT|GL_COLOR_BUFFER_BIT);
-		glClearColor(1f, 0, 0, 1f);
+		glClearColor(1.f, 0, 0, 1.f);
     glUseProgram(mProgram);
     glBindVertexArray(mVBState);
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numInstances);
