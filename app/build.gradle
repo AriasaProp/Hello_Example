@@ -17,7 +17,13 @@ android {
         versionCode 1
         versionName "1.0"
         signingConfig signingConfigs.mainSign
-        multiDexEnabled = true
+        multiDexEnabled true
+        
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_STL=c++_static'
+            }
+        }
     }
     
     buildTypes {
