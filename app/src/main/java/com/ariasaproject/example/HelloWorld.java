@@ -7,12 +7,12 @@ import android.widget.TextView;
 public class HelloWorld extends Activity {
 	@Override
 	public void onCreate(Bundle b) {
-		setContentView(R.layout.activity_main);
 		super.onCreate(b);
+		setContentView(R.layout.activity_main);
 		((TextView)findViewById(R.id.text2)).setText(helloJNI());
 	}
 	
-	public final native String helloJNI();
+	public static final native String helloJNI();
 }
 
 

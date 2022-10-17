@@ -30,11 +30,13 @@ android {
         sourceCompatibility = 1.8
         targetCompatibility = 1.8
     }
-    
+    android {
+    		ndkVersion "21.4.7075529"
+		}
     externalNativeBuild {
     		cmake {
     				path "src/main/cpp/CMakeLists.txt"
-    				version "3.10.2"
+    				version "3.6.0"
     		}
     }
 }
