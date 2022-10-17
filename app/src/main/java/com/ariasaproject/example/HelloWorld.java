@@ -2,7 +2,7 @@ package com.ariasaproject.example;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.view.TextView;
+import android.widget.TextView;
 
 public class HelloWorld extends Activity {
 	@Override
