@@ -7,13 +7,13 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-
+/*
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
 import javax.microedition.khronos.opengles.GL10;
-
+*/
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -42,6 +42,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
     static {
         System.loadLibrary("ext");
     }
+    public static final String TAG = "Hello World"
 
     // lifecycle loop peoperties
     Thread mainTGFThread;
@@ -50,6 +51,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
     volatile boolean resume, pause, resize, destroy;
     volatile boolean hasSurface;
     int mayorV, minorV;
+    int width, height;
     boolean mExited = false;
     
     @Override
