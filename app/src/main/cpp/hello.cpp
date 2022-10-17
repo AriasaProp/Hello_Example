@@ -137,7 +137,7 @@ bool RendererES3::init() {
 
     glGenBuffers(VB_COUNT, mVB);
     glBindBuffer(GL_ARRAY_BUFFER, mVB[VB_INSTANCE]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD), & QUAD[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(QUAD), &QUAD[0], GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, mVB[VB_SCALEROT]);
     glBufferData(GL_ARRAY_BUFFER, MAX_INSTANCES * 4 * sizeof(float), NULL, GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, mVB[VB_OFFSET]);
@@ -202,9 +202,7 @@ void RendererES3::draw(unsigned int numInstances) {
     glDrawArraysInstanced(GL_TRIANGLE_STRIP, 0, 4, numInstances);
 }
 
-
-
-const Vertex QUAD[4] = {
+extern const Vertex QUAD[4] = {
     {{-0.7f, -0.7f}, {0x00, 0xFF, 0x00 }},
     {{0.7f, -0.7f}, {0x00, 0x00, 0xFF }},
     {{-0.7f, 0.7f}, {0xFF, 0x00, 0x00}},
