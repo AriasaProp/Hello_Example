@@ -16,5 +16,5 @@ add_library(${PROJECT_NAME} SHARED ${Src_Files})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 # include external libraries from core and ndk extras
-target_link_libraries(${PROJECT_NAME} PRIVATE GLESv3 android EGL log m)
+target_link_libraries(${PROJECT_NAME} PRIVATE core GLESv3 android EGL log m)
 
