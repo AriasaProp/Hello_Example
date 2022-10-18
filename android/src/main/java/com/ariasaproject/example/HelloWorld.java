@@ -143,32 +143,31 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     }
     
     
-    public static class ApplicationListener {
-    		public final native void create();
-    		public final native void resize(int w, int h);
-    		public final native void resume();
-    		public final native void render(float d);
-    		public final native void pause();
-    		public final native void destroy();
-    		/*
-    		public void create() {
-    			recreate();
-    		}
-    		public void recreate() {
-    			GLES30.glClearColor(1, 1, 0, 1); 
-    		}
-    		public void resize(int w, int h) {}
-    		public void resume() {
-    		}
-    		public void render(float d) {
-    			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT );
-    		}
-    		public void pause() {
-    			GLES30.glClearColor(1, 0, 1, 1); 
-    		}
-    		public void destroy() {}
-    		*/
-    }
+		public final native void create();
+		public final native void resize(int w, int h);
+		public final native void resume();
+		public final native void render(float d);
+		public final native void pause();
+		public final native void destroy();
+		/*
+		public void create() {
+			recreate();
+		}
+		public void recreate() {
+			GLES30.glClearColor(1, 1, 0, 1); 
+		}
+		public void resize(int w, int h) {}
+		public void resume() {
+		}
+		public void render(float d) {
+			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT );
+		}
+		public void pause() {
+			GLES30.glClearColor(1, 0, 1, 1); 
+		}
+		public void destroy() {}
+		*/
+    
 
     // main loop
     @Override
@@ -179,7 +178,6 @@ public class HelloWorld extends Activity implements Runnable, Callback {
         EGLSurface mEglSurface = null;
         EGLConfig mEglConfig = null;
         EGLContext mEglContext = null;
-        ApplicationListener appl = new ApplicationListener();
         try {
             byte eglDestroyRequest = 0;// to destroy egl surface, egl contex, egl display, ?....
             boolean wantRender = false, newContext = true, // indicator
@@ -298,9 +296,9 @@ public class HelloWorld extends Activity implements Runnable, Callback {
                         throw new RuntimeException("Make EGL failed: " + Integer.toHexString(EGL14.eglGetError()));
 
                     if (newContext) {
-                  			appl.create();
+                  			create();
                        
-                        appl.resize(width, height);
+                        resize(width, height);
                         lresize = false;
                         lastFrameTime = System.currentTimeMillis();
                         newContext = false;
@@ -309,13 +307,13 @@ public class HelloWorld extends Activity implements Runnable, Callback {
                 if (lresize) {
                     EGL14.eglMakeCurrent(mEglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
                     EGL14.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
-                    appl.resize(width, height);
+                    resize(width, height);
                 }
 
                 long time = System.currentTimeMillis();
 
                 if (lresume) {
-                    appl.resume();
+                    resume();
                     time = frameStart = lastFrameTime = 0;
                 }
                 if (time - frameStart > 1000l) {
@@ -326,10 +324,10 @@ public class HelloWorld extends Activity implements Runnable, Callback {
                 deltaTime = (time - lastFrameTime) / 1000f;
                 lastFrameTime = time;
 
-                appl.render(deltaTime);
+                render(deltaTime);
                 
                 if (lpause) {
-                    appl.pause();
+                    pause();
                     eglDestroyRequest |= 1;
                 }
                 if (!EGL14.eglSwapBuffers(mEglDisplay, mEglSurface)) {
@@ -362,7 +360,7 @@ public class HelloWorld extends Activity implements Runnable, Callback {
             Log.e(TAG, "error " + e.getMessage());
         } finally {
             // dispose all resources
-            appl.destroy();
+            destroy();
 
             if (mEglSurface != null) {
                 EGL14.eglMakeCurrent(mEglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
@@ -377,12 +375,12 @@ public class HelloWorld extends Activity implements Runnable, Callback {
                 EGL14.eglTerminate(mEglDisplay);
                 mEglDisplay = null;
             }
-            holder.removeCallback(this);
             // end thread
             synchronized (this) {
                 mExited = true;
                 notifyAll();
             }
+            holder.removeCallback(this);
         }
     }
 }
