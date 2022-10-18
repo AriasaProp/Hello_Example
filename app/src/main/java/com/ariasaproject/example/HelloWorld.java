@@ -145,11 +145,10 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     public static class ApplicationListener {
     		public void create() {}
     		public void recreate() {
-    			GLES30.glClearColor(1, 1, 0, 1);
     		}
     		public void resize(int w, int h) {}
     		public void resume() {
-    			
+    			GLES30.glClearColor(1, 1, 0, 1); 
     		}
     		public void render(float d) {
     			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
