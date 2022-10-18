@@ -48,7 +48,6 @@ public class HelloWorld extends Activity implements Callback, Runnable {
     // lifecycle loop peoperties
     Thread mainTGFThread;
     private SurfaceHolder holder;
-    private final enum threadState { None, Resume, Resize, Pause, Destroy };
     volatile boolean resume, pause, resize, destroy;
     volatile boolean hasSurface;
     int mayorV, minorV;
