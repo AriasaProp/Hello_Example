@@ -4,7 +4,7 @@ project(ext LANGUAGES CXX)
 set(CMAKE_BUILD_TYPE Release)
 set(CMAKE_CXX_STANDARD 11)
 
-set(CORE_SRC "../../../../core");
+set(CORE_SRC "../../../../core")
 file(GLOB_RECURSE Include_subDir LIST_DIRECTORIES true ${CORE_SRC})
 add_subdirectory(${CORE_SRC} bin/core)
 
