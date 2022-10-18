@@ -42,7 +42,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
     static {
         System.loadLibrary("ext");
     }
-    public static final String TAG = "Hello World"
+    public static final String TAG = "Hello World";
 
     // lifecycle loop peoperties
     Thread mainTGFThread;
