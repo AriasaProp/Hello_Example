@@ -143,17 +143,21 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     }
     
     public static class ApplicationListener {
-    		public void create() {}
+    		public void create() {
+    			recreate();
+    		}
     		public void recreate() {
+    			GLES30.glClearColor(1, 1, 0, 1); 
     		}
     		public void resize(int w, int h) {}
     		public void resume() {
     		}
     		public void render(float d) {
-    			GLES30.glClearColor(1, 1, 0, 1); 
     			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT );
     		}
-    		public void pause() {}
+    		public void pause() {
+    			GLES30.glClearColor(1, 0, 1, 1); 
+    		}
     		public void destroy() {}
     }
 
