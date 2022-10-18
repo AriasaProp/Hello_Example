@@ -1,6 +1,6 @@
 #ifndef Included_MainListener
 #define Included_MainListener
-#include "translateGraphicsFunction.h"
+#include "translatedGraphicsFunction.h"
 
 namespace Main {
 		extern static void create(const TranslateGraphicsFunction*);
