@@ -151,7 +151,7 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     		}
     		public void render(float d) {
     			GLES30.glClearColor(1, 1, 0, 1); 
-    			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT | );
+    			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT );
     		}
     		public void pause() {}
     		public void destroy() {}
