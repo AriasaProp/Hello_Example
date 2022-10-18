@@ -5,19 +5,19 @@ static TranslatedGraphicsFunction *tgf = nullptr;
 static void Main::create(const TranslatedGraphicsFunction *t) {
 	tgf = t;
 }
-static void Main::resume() {
+void Main::resume() {
 	
 }
-static void Main::resize(unsigned int width, unsigned int height) {
+void Main::resize(unsigned int width, unsigned int height) {
 	
 }
-static void Main::render(float delta) {
+void Main::render(float delta) {
 	
 }
-static void Main::pause() {
+void Main::pause() {
 	
 }
-static void Main::destroy() {
+void Main::destroy() {
 	delete tgf;
 	tgf = nullptr;
 }
