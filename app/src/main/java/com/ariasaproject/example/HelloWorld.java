@@ -148,10 +148,10 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     		}
     		public void resize(int w, int h) {}
     		public void resume() {
-    			GLES30.glClearColor(1, 1, 0, 1); 
     		}
     		public void render(float d) {
-    			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
+    			GLES30.glClearColor(1, 1, 0, 1); 
+    			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT | );
     		}
     		public void pause() {}
     		public void destroy() {}
