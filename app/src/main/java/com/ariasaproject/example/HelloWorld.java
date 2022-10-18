@@ -84,6 +84,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
     @Override
     protected synchronized void onResume() {
     		resume = true;
+    		super.onResume();
     }
     
     @Override
@@ -109,6 +110,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                 }
             }
         }
+        super.onPause();
     }
     private static class ListenerAppl {
 	    	public void create () {
