@@ -143,12 +143,12 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     }
     
     
-		public final native void create();
-		public final native void resume();
-		public final native void resize(int w, int h);
-		public final native void render(float d);
-		public final native void pause();
-		public final native void destroy();
+		private final native void create();
+		private final native void resume();
+		private final native void resize(int w, int h);
+		private final native void render(float d);
+		private final native void pause();
+		private final native void destroy();
 		/*
 		public void create() {
 			recreate();

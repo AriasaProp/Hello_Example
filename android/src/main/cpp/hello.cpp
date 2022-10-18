@@ -361,7 +361,7 @@ static void printGlString(const char *name, GLenum s) {
     const char * v = (const char *) glGetString(s);
     ALOGV("GL %s: %s\n", name, v);
 }
-
+/*
 static Renderer *g_renderer = NULL;
 #define JEx(R, M) extern "C" JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M 
 
@@ -401,3 +401,4 @@ JEx(void, step)(JNIEnv *env, jobject obj) {
         g_renderer -> render();
     }
 }
+*/
