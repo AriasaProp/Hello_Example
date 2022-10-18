@@ -2,7 +2,7 @@
 
 static TranslatedGraphicsFunction *tgf = nullptr;
 
-static void Main::create(const TranslatedGraphicsFunction *t) {
+void Main::create(TranslatedGraphicsFunction *t) {
 	tgf = t;
 }
 void Main::resume() {

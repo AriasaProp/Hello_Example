@@ -3,7 +3,7 @@
 #include "translatedGraphicsFunction.h"
 
 namespace Main {
-		void create(const TranslatedGraphicsFunction*);
+		void create(TranslatedGraphicsFunction*);
 		void resume();
 		void resize(unsigned int, unsigned int);
 		void render(float);
