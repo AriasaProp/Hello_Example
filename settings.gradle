@@ -1,2 +1,2 @@
-include(":app")
-rootProject.name="AndroidBase"
+include ':android' 
+rootProject.name="Game Example"
