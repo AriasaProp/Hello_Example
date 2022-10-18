@@ -1,4 +1,4 @@
-package com.ariasaproject.advancerofrpg;
+package com.ariasaproject.example;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -11,6 +11,7 @@ import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
 import android.opengl.EGLDisplay;
 import android.opengl.EGLSurface;
+import android.opengl.GLES30;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -27,7 +28,7 @@ import java.util.List;
 import java.util.Random;
 
 //AndroidApplication include graphics and Application
-public class HelloWorld extends Activity implements Application, Runnable, Callback {
+public class HelloWorld extends Activity implements Runnable, Callback {
     public static final String TAG = "MainActivity";
 
     static {
@@ -37,9 +38,6 @@ public class HelloWorld extends Activity implements Application, Runnable, Callb
             System.out.println("failed to load library : ext");
             System.exit(0);
         }
-    }
-    private static class TGF {
-    	
     }
 
     int mayorV, minorV;
@@ -51,7 +49,6 @@ public class HelloWorld extends Activity implements Application, Runnable, Callb
     Thread mainTGFThread;
     // graphics params
     private SurfaceHolder holder;
-    private final TGF tgf = new TGF();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -150,6 +147,7 @@ public class HelloWorld extends Activity implements Application, Runnable, Callb
     		public void recreate() {
     			GLES30.glClearColor(1, 1, 0, 1);
     		}
+    		public void resize(int w, int h) {}
     		public void resume() {
     			
     		}
