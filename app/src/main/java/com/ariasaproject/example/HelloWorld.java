@@ -181,7 +181,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
         try {
             byte eglDestroyRequest = 0;// to destroy egl surface, egl contex, egl display, ?....
             boolean newContext = true, // indicator
-                    created = false, lrunning = true, lresize, lresume = false, lpause = false;// on running state
+                    created = false, lrunning = true, lresize = false, lresume = false, lpause = false;// on running state
             while (!destroy) {
                 synchronized (this) {
                     // egl destroy request
