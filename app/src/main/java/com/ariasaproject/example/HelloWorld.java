@@ -1,18 +1,4 @@
-package com.ariasaproject.example;
-
-import android.content.Context;
-import android.graphics.PixelFormat;
-import android.opengl.GLSurfaceView;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.MotionEvent;
-/*
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLDisplay;
-*/
+package com.ariasaproject.advancerofrpg;
 
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -20,16 +6,11 @@ import android.content.Context;
 import android.content.pm.ConfigurationInfo;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Configuration;
-import android.media.AudioAttributes;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
-import android.media.SoundPool;
 import android.opengl.EGL14;
 import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
 import android.opengl.EGLDisplay;
 import android.opengl.EGLSurface;
-import android.opengl.GLES30;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -39,26 +20,45 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.View.OnSystemUiVisibilityChangeListener;
 
-public class HelloWorld extends Activity implements Callback, Runnable {
-    static {
-        System.loadLibrary("ext");
-    }
-    public static final String TAG = "Hello World";
+import java.io.FileDescriptor;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
-    // lifecycle loop peoperties
-    Thread mainTGFThread;
-    private SurfaceHolder holder;
-    volatile boolean resume, pause, resize, destroy;
-    volatile boolean hasSurface;
+//AndroidApplication include graphics and Application
+public class HelloWorld extends Activity implements Application, Runnable, Callback {
+    public static final String TAG = "MainActivity";
+
+    static {
+        try {
+            System.loadLibrary("ext");
+        } catch (Exception e) {
+            System.out.println("failed to load library : ext");
+            System.exit(0);
+        }
+    }
+    private static class TGF {
+    	
+    }
+
     int mayorV, minorV;
-    int width, height;
-    boolean mExited = false;
-    
+    volatile boolean resume = false, pause = false, destroy = false, resize = false, rendered = false, hasFocus = true,
+            hasSurface = false, mExited = false;
+    long frameStart = System.currentTimeMillis(), lastFrameTime = System.currentTimeMillis();
+    int frames, fps, width = 0, height = 0;
+    float deltaTime = 0;
+    Thread mainTGFThread;
+    // graphics params
+    private SurfaceHolder holder;
+    private final TGF tgf = new TGF();
+
     @Override
-    public void onCreate(Bundle b) {
-        super.onCreate(b);
+    protected void onCreate(Bundle savedInstanceState) {
+        // SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        super.onCreate(savedInstanceState);
         final View d = getWindow().getDecorView();
-        final int uiHide = 5382;//hide all system ui as possible
+    		final int uiHide = 5382;//hide all system ui as possible
         d.setSystemUiVisibility(uiHide);
         d.setOnSystemUiVisibilityChangeListener(new OnSystemUiVisibilityChangeListener() {
             @Override
@@ -67,30 +67,41 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                     d.setSystemUiVisibility(uiHide);
             }
         });
-				setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main);
         SurfaceView view = findViewById(R.id.glSurfaceView);
         
         ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
         this.mayorV = (short) (configurationInfo.reqGlEsVersion >> 16);
         this.minorV = (short) (configurationInfo.reqGlEsVersion & 0x0000ffff);
-        
-	      // for main thread loop
         this.holder = view.getHolder();
+        
         mainTGFThread = new Thread(this, "GLThread");
         mainTGFThread.start();
     }
-    
+
     @Override
     protected synchronized void onResume() {
-    		resume = true;
-    		super.onResume();
+        super.onResume();
+        resume = true;
+        notifyAll();
     }
-    
+
     @Override
     protected synchronized void onPause() {
+        // graphics
+        pause = true;
+        rendered = true;
+        notifyAll();
+        while (!mExited && rendered) {
+            try {
+                wait();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
         if (isFinishing()) {
-        		destroy = true;
+            destroy = true;
             notifyAll();
             while (!mExited) {
                 try {
@@ -99,63 +110,27 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                     Thread.currentThread().interrupt();
                 }
             }
-        } else {
-        		pause = true;
-    				notifyAll();
-        		while (!mExited && pause) {
-                try {
-                    wait();
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt();
-                }
-            }
+
         }
         super.onPause();
     }
-    private static class ListenerAppl {
-	    	public void create () {
-	    		recreate();
-	    	}
-	    	public void resume() {
-	    		
-	    	}
-        public void resize(int width, int height) {
-            GLES30.glViewport(0, 0, width, height);
-        }
-        public void recreate() {
-  					GLES30.glClearColor(1, 0, 1, 1);
-            //init();
-        }
-        public void render() {
-        		GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
-            //step();
-        }
-        public void pause() {
-        	
-        }
-        public void destroy() {
-        	
-        }
-    }
-    
-    public static native final void init();
-    public static native final void resize(int w, int h);
-    public static native final void step();
-   
-   
+
     @Override
     public synchronized void surfaceCreated(SurfaceHolder holder) {
         // fall thru surfaceChanged
-        hasSurface = true;
     }
 
     @Override
     public synchronized void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+        if (!hasSurface) {
+            rendered = true;
+            hasSurface = true;
+        }
         width = w;
         height = h;
         resize = true;
         notifyAll();
-        while (!mExited && resize) {
+        while (!mExited && rendered) {
             try {
                 wait();
             } catch (InterruptedException ex) {
@@ -169,6 +144,21 @@ public class HelloWorld extends Activity implements Callback, Runnable {
         hasSurface = false;
         notifyAll();
     }
+    
+    public static class ApplicationListener {
+    		public void create() {}
+    		public void recreate() {
+    			GLES30.glClearColor(1, 1, 0, 1);
+    		}
+    		public void resume() {
+    			
+    		}
+    		public void render(float d) {
+    			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
+    		}
+    		public void pause() {}
+    		public void destroy() {}
+    }
 
     // main loop
     @Override
@@ -179,13 +169,21 @@ public class HelloWorld extends Activity implements Callback, Runnable {
         EGLSurface mEglSurface = null;
         EGLConfig mEglConfig = null;
         EGLContext mEglContext = null;
-        ListenerAppl appl = new ListenerAppl();
+        ApplicationListener appl = new ApplicationListener();
         try {
             byte eglDestroyRequest = 0;// to destroy egl surface, egl contex, egl display, ?....
-            boolean newContext = true, // indicator
-                    created = false, lrunning = true, lresize = false, lresume = false, lpause = false;// on running state
+            boolean wantRender = false, newContext = true, // indicator
+                    created = false, lrunning = true, lresize, lresume = false, lpause = false;// on running state
             while (!destroy) {
                 synchronized (this) {
+                    // render notify
+                    if (wantRender) {
+                        rendered = false;
+                        wantRender = false;
+                        notifyAll();
+                    }
+                    if (rendered)
+                        wantRender = true;
                     // egl destroy request
                     if (mEglSurface != null && (eglDestroyRequest > 0 || !hasSurface)) {
                         EGL14.eglMakeCurrent(mEglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
@@ -205,19 +203,20 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                         eglDestroyRequest = 0;
                     }
                     // end destroy request
-                    //after Rendererr
-                    //request procces
-                    if (lpause && pause) {
-                    	pause = false;
-                    	lrunning = false;
-                    }
-                    else
-                    	lrunning = true;
+
+                    lresize = resize;
+                    if (resize)
+                        resize = false;
+                    if (lpause)
+                        lrunning = false;
                     lpause = pause;
-                    if (lresume && resume) resume = false;
+                    if (pause)
+                        pause = false;
                     lresume = resume;
-                    if (lresize && resize) resize = false;
-                    lresize = resize; 
+                    if (resume) {
+                        resume = false;
+                        lrunning = true;
+                    }
                     // Ready to draw?
                     if (!lrunning || !hasSurface) {
                         wait();
@@ -290,10 +289,13 @@ public class HelloWorld extends Activity implements Callback, Runnable {
 
                     if (newContext) {
                         if (created)
-                            appl.recreate();
+                      			appl.recreate();
                         else
-                            appl.create(); 
+                            appl.create();
+                       
                         appl.resize(width, height);
+                        lresize = false;
+                        lastFrameTime = System.currentTimeMillis();
                         newContext = false;
                     }
                 }
@@ -302,11 +304,23 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                     EGL14.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
                     appl.resize(width, height);
                 }
- 
+
+                long time = System.currentTimeMillis();
+
                 if (lresume) {
                     appl.resume();
+                    time = frameStart = lastFrameTime = 0;
                 }
-                appl.render();
+                if (time - frameStart > 1000l) {
+                    fps = frames;
+                    frames = 0;
+                    frameStart = time;
+                }
+                deltaTime = (time - lastFrameTime) / 1000f;
+                lastFrameTime = time;
+
+                appl.render(deltaTime);
+                
                 if (lpause) {
                     appl.pause();
                     eglDestroyRequest |= 1;
@@ -331,6 +345,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                             Log.e(TAG, "eglSwapBuffers failed: " + Integer.toHexString(EGL14.eglGetError()));
                     }
                 }
+                frames++;
             }
         } catch (Throwable e) {
             // fall thru and exit normally
@@ -339,7 +354,9 @@ public class HelloWorld extends Activity implements Callback, Runnable {
             }
             Log.e(TAG, "error " + e.getMessage());
         } finally {
-        		appl.destroy();
+            // dispose all resources
+            appl.destroy();
+
             if (mEglSurface != null) {
                 EGL14.eglMakeCurrent(mEglDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_CONTEXT);
                 EGL14.eglDestroySurface(mEglDisplay, mEglSurface);
