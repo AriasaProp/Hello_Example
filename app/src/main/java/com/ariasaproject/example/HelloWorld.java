@@ -12,8 +12,8 @@ import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.opengles.GL10;
 */
+
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
@@ -29,6 +29,7 @@ import android.opengl.EGLConfig;
 import android.opengl.EGLContext;
 import android.opengl.EGLDisplay;
 import android.opengl.EGLSurface;
+import android.opengl.GLES30;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -118,14 +119,14 @@ public class HelloWorld extends Activity implements Callback, Runnable {
 	    		
 	    	}
         public void resize(int width, int height) {
-            gl.glViewport(0, 0, width, height);
+            GLES30.glViewport(0, 0, width, height);
         }
         public void recreate() {
-  					gl.glClearColor(1, 0, 1, 1);
+  					GLES30.glClearColor(1, 0, 1, 1);
             //init();
         }
         public void render() {
-        		gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+        		GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT);
             //step();
         }
         public void pause() {
@@ -232,7 +233,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                         throw new RuntimeException("eglGetDisplay failed " + Integer.toHexString(EGL14.eglGetError()));
                     }
                     if (EGL14.eglInitialize(mEglDisplay, temp, 0, temp, 1))
-                        log(TAG, "version EGL " + temp[0] + "." + temp[1]);
+                        Log.i(TAG, "version EGL " + temp[0] + "." + temp[1]);
                     else
                         throw new RuntimeException("eglInitialize failed " + Integer.toHexString(EGL14.eglGetError()));
 
@@ -259,7 +260,7 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                                 } else {
                                     int error;
                                     while ((error = EGL14.eglGetError()) != EGL14.EGL_SUCCESS)
-                                        error(TAG, String.format("EglConfigAttribute : EGL error: 0x%x", error));
+                                        Log.e(TAG, String.format("EglConfigAttribute : EGL error: 0x%x", error));
                                 }
                             }
                             if (curSc > lastSc) {
@@ -323,19 +324,19 @@ public class HelloWorld extends Activity implements Callback, Runnable {
                             eglDestroyRequest |= 1;
                             break;
                         case EGL14.EGL_BAD_NATIVE_WINDOW:
-                            error(TAG, "eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" + Thread.currentThread().getId());
+                            Log.e(TAG, "eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" + Thread.currentThread().getId());
                             break;
                         default:
-                            error(TAG, "eglSwapBuffers failed: " + Integer.toHexString(EGL14.eglGetError()));
+                            Log.e(TAG, "eglSwapBuffers failed: " + Integer.toHexString(EGL14.eglGetError()));
                     }
                 }
             }
         } catch (Throwable e) {
             // fall thru and exit normally
             for (StackTraceElement s : e.getStackTrace()) {
-                error(TAG, s.toString());
+                Log.e(TAG, s.toString());
             }
-            error(TAG, "error " + e.getMessage());
+            Log.e(TAG, "error " + e.getMessage());
         } finally {
         		appl.destroy();
             if (mEglSurface != null) {
