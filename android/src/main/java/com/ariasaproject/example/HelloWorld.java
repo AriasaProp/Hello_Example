@@ -142,7 +142,15 @@ public class HelloWorld extends Activity implements Runnable, Callback {
         notifyAll();
     }
     
+    
     public static class ApplicationListener {
+    		public final native void create();
+    		public final native void resize(int w, int h);
+    		public final native void resume();
+    		public final native void render(float d);
+    		public final native void pause();
+    		public final native void destroy();
+    		/*
     		public void create() {
     			recreate();
     		}
@@ -159,6 +167,7 @@ public class HelloWorld extends Activity implements Runnable, Callback {
     			GLES30.glClearColor(1, 0, 1, 1); 
     		}
     		public void destroy() {}
+    		*/
     }
 
     // main loop
@@ -289,10 +298,7 @@ public class HelloWorld extends Activity implements Runnable, Callback {
                         throw new RuntimeException("Make EGL failed: " + Integer.toHexString(EGL14.eglGetError()));
 
                     if (newContext) {
-                        if (created)
-                      			appl.recreate();
-                        else
-                            appl.create();
+                  			appl.create();
                        
                         appl.resize(width, height);
                         lresize = false;
