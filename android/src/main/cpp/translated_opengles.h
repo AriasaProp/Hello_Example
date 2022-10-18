@@ -8,6 +8,6 @@ public:
 	~tgf_gles() override {}
 	void clearcolormask(unsigned int, float, float, float, float) override;
 	void viewport(unsigned int, unsigned int, unsigned int, unsigned int) override;
-}
+};
 
 #endif // Included_TGLES

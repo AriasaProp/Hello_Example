@@ -3,7 +3,7 @@
 #include "mainListener.h"
 #include "translated_opengles.h"
 
-#define JEx(R, M) JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M
+#define JEx(R, M) extern "C" JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M
 
 JEx(void, create) (JNIEnv *e, jobject o) {
 	Main::create(new tgf_gles());
