@@ -90,9 +90,8 @@ JEx(void, onstop) (JNIEnv *e, jobject o) {
 }
 
 
-std::ostringstream ss;
-
 void main_loop() {
+	std::ostringstream ss;
 	TranslatedGraphicsFunction *tgf = new tgf_gles();
 	EGLDisplay mEglDisplay = nullptr;
 	EGLSurface mEglSurface;
