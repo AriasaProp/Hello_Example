@@ -110,65 +110,63 @@ void main_loop() {
 		bool wantRender = false, newContext = true, 
 			created = false, lrunning = false, lresize = false, lresume = false, lpause = false;
 		while (!destroy) {
-			{
-				//guard l bool function state
-				std::unique_lock<std::mutex> u_lck(mtx);
-				mtx_guard.lock();
-				// render notify
-				if (wantRender) {
-					rendered = false;
-					wantRender = false;
-					cv.notify_all();
+			//guard l bool function state
+			std::unique_lock<std::mutex> u_lck(mtx);
+			mtx_guard.lock();
+			// render notify
+			if (wantRender) {
+				rendered = false;
+				wantRender = false;
+				cv.notify_all();
+			}
+			if (rendered)
+				wantRender = true;
+			// egl destroy request
+			if (mEglSurface && (eglDestroyRequest > 0 || !window)) {
+				eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+				if (!eglDestroySurface(mEglDisplay, mEglSurface)) {
+					ss.str("");
+					ss.clear();
+   						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+					ALOGE("%s", ss.str().c_str());
 				}
-				if (rendered)
-					wantRender = true;
-				// egl destroy request
-				if (mEglSurface && (eglDestroyRequest > 0 || !window)) {
-					eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-					if (!eglDestroySurface(mEglDisplay, mEglSurface)) {
+				mEglSurface = 0;
+				if (mEglContext && (eglDestroyRequest > 1)) {
+					if (!eglDestroyContext(mEglDisplay, mEglContext)) {
 						ss.str("");
 						ss.clear();
-    						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-						ALOGE("%s", ss.str());
+						ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+						ALOGE("%s", ss.str().c_str());
 					}
-					mEglSurface = 0;
-					if (mEglContext && (eglDestroyRequest > 1)) {
-						if (!eglDestroyContext(mEglDisplay, mEglContext)) {
-							ss.str("");
-							ss.clear();
-    							ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-							ALOGE("%s", ss.str());
-						}
-						mEglContext = NULL;
-						newContext = true;
-						if (mEglDisplay && (eglDestroyRequest > 3)) {
-							eglTerminate(mEglDisplay);
-							mEglDisplay = NULL;
-						}
+					mEglContext = NULL;
+					newContext = true;
+					if (mEglDisplay && (eglDestroyRequest > 3)) {
+						eglTerminate(mEglDisplay);
+						mEglDisplay = NULL;
 					}
-					eglDestroyRequest = 0;
 				}
-				// end destroy request
-				lresize = resize;
-				if (resize)
-					resize = false;
-				if (lpause)
-					lrunning = false;
-				lpause = pause;
-				if (pause)
-					pause = false;
-				lresume = resume;
-				if (resume) {
-					resume = false;
-					lrunning = true;
-				}
-				mtx_guard.unlock();
-				cv.notify_all();
-				// Ready to draw?
-				if (!lrunning || !window) {
-					cv.wait(u_lck);
-					continue;
-				}
+				eglDestroyRequest = 0;
+			}
+			// end destroy request
+			lresize = resize;
+			if (resize)
+				resize = false;
+			if (lpause)
+				lrunning = false;
+			lpause = pause;
+			if (pause)
+				pause = false;
+			lresume = resume;
+			if (resume) {
+				resume = false;
+				lrunning = true;
+			}
+			mtx_guard.unlock();
+			cv.notify_all();
+			// Ready to draw?
+			if (!lrunning || !window) {
+				cv.wait(u_lck);
+				continue;
 			}
 			if (!mEglDisplay) {
 				EGLint temp[2]; // for chaching value output
@@ -178,18 +176,18 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglGetDisplay failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE("%s", ss.str());
+					ALOGE("%s", ss.str().c_str());
 				}
 				if (eglInitialize(mEglDisplay, &temp[0], &temp[1])) {
 					ss.str("");
 					ss.clear();
 					ss << "version EGL " << temp[0] << "." << temp[1];
-					ALOGV(ss.str().c_str());
+					ALOGV(ss.str().c_str().c_str());
 				} else {
 					ss.str("");
 					ss.clear();
     					ss << "eglInitialize failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE("%s", ss.str());
+					ALOGE("%s", ss.str().c_str());
 				}
 				if (!mEglConfig) {
 					// choose best config
@@ -218,7 +216,7 @@ void main_loop() {
 									ss.str("");
 									ss.clear();
     									ss << "eglConfigAttribute failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
-									ALOGE("%s", ss.str());
+									ALOGE("%s", ss.str().c_str());
 								}
 							}
 						}
@@ -238,7 +236,7 @@ void main_loop() {
 						ss.str("");
 						ss.clear();
     						ss << "createContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-						ALOGE("%s", ss.str());
+						ALOGE("%s", ss.str().c_str());
 					}
 				}
 				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, window, nullptr);
@@ -247,13 +245,13 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "Create EGL Surface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE("%s", ss.str());
+					ALOGE("%s", ss.str().c_str());
 				}
 				if (!eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext)) {
 					ss.str("");
 					ss.clear();
     					ss << "Make EGL failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE("%s", ss.str());
+					ALOGE("%s", ss.str().c_str());
 				}
 				if (newContext) {
 					Main::create(tgf);
@@ -291,7 +289,7 @@ void main_loop() {
 				eglDestroyRequest |= 1;
 			}
 			if (!eglSwapBuffers(mEglDisplay, mEglSurface)) {
-				unsigned int error = eglGetError();
+				EGLint error = eglGetError();
 				switch (error) {
 				case EGL_BAD_DISPLAY:
 					eglDestroyRequest |= 4;
@@ -307,13 +305,13 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" << std::this_thread::get_id();
-					ALOGE(ss.str().c_str());
+					ALOGE("%s", ss.str().c_str());
 					break;
 				default:
 					ss.str("");
 					ss.clear();
     					ss << "eglSwapBuffers failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
-					ALOGE("%s", ss.str());
+					ALOGE("%s", ss.str().c_str());
 					break;
 			}
 		}
