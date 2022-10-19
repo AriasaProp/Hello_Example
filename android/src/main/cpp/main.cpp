@@ -6,8 +6,8 @@ void main_loop();
 #include <android/log.h>
 #include <android/native_window_jni.h>
 
-#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), \
-			throw ("Error print!")
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), throw ("Error print!")
+
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Hello_Activity", __VA_ARGS__)
 
 
@@ -39,7 +39,7 @@ JEx(void, onstart) (JNIEnv *e, jobject o){
 }
 
 JEx(void, onresume) (JNIEnv *e, jobject o){
-	mtx_guard.lock()
+	mtx_guard.lock();
 	resume = true;
 	cv.notify_all();
 	mtx_guard.unlock();
@@ -102,9 +102,8 @@ void main_loop() {
 	EGLSurface mEglSurface;
 	EGLConfig mEglConfig = nullptr;
 	EGLContext mEglContext;
-	unsigned long
-		frameStart = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count(),
-		lastFrameTime= std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
+	long frameStart = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count(),
+		lastFrameTime= std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
 
 	try {
 		unsigned char eglDestroyRequest = 0;
@@ -242,7 +241,7 @@ void main_loop() {
 						ALOGE(ss.str());
 					}
 				}
-				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, holder, nullptr);
+				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, window, nullptr);
 				if (!mEglSurface || mEglSurface == EGL_NO_SURFACE) {
 					mEglSurface = NULL;
 					ss.str("");
@@ -261,7 +260,7 @@ void main_loop() {
 
 					Main::resize(width, height);
 					lresize = false;
-					lastFrameTime = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
+					lastFrameTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
 					newContext = false;
 				}
 			}
@@ -270,7 +269,7 @@ void main_loop() {
 				eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
 				Main::resize(width, height);
 			}
-			unsigned long time = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
+			long time = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
 			
 			if (lresume) {
 				Main::resume();
@@ -319,8 +318,8 @@ void main_loop() {
 			}
 		}
 		frames++;
-	} catch (const char *err) {
-		ALOGE(err);
+	} catch (...) {
+		ALOGE("fall thru error!");
 	} finally {
 		// dispose all resources
 		Main::destroy();
