@@ -1,4 +1,10 @@
-#include <jni.h>
+//Native NDK Kit
+#include <native_activity.h>
+#include <native_window_jni.h>
+#include <rect.h>
+#include <surface_control.h>
+#include <window.h>
+//next then
 #include "mainListener.h"
 #include "translated_opengles.h"
 
@@ -22,6 +28,7 @@ void main_loop();
 
 std::condition_variable cv;
 std::mutex mtx;
+std::mutex mtx_guard;
 std::thread *mthread = nullptr;
 
 int mayorV = 3, minorV = 0;
@@ -36,9 +43,10 @@ JEx(void, onstart) (JNIEnv *e, jobject o){
 }
 
 JEx(void, onresume) (JNIEnv *e, jobject o){
-	
+	mtx_guard.lock()
 	resume = true;
-	cv.notify_all()
+	cv.notify_all();
+	mtx_guard.unlock();
 }
 
 JEx(void, surfacecreated) (JNIEnv *e, jobject o){
@@ -47,6 +55,7 @@ JEx(void, surfacecreated) (JNIEnv *e, jobject o){
 }
 
 JEx(void, surfacechanged) (JNIEnv *e, jobject o, jint w, jint h){
+	mtx_guard.lock();
 	std::unique_lock<std::mutex> u_lck(mtx);
 	if (!hasSurface) {
 		rendered = true;
@@ -58,14 +67,18 @@ JEx(void, surfacechanged) (JNIEnv *e, jobject o, jint w, jint h){
 	cv.notify_all();
 	while (!mExited && rendered)
 		cv.wait(u_lck);
+	mtx_guard.unlock();
 }
 
 JEx(void, surfacedestroyed) (JNIEnv *e, jobject o){
+	mtx_guard.lock();
 	hasSurface = false;
 	cv.notify_all();
+	mtx_guard.unlock();
 }
 
 JEx(void, onpause) (JNIEnv *e, jobject o, jboolean _finish){
+	mtx_guard.lock();
 	std::unique_lock<std::mutex> u_lck(mtx);
 	pause = true;
 	rendered = true;
@@ -77,6 +90,7 @@ JEx(void, onpause) (JNIEnv *e, jobject o, jboolean _finish){
 	cv.notify_all();
 	while (!mExited)
 		cv.wait(u_lck);
+	mtx_guard.unlock();
 }
 
 JEx(void, onstop) (JNIEnv *e, jobject o){
@@ -87,17 +101,17 @@ JEx(void, onstop) (JNIEnv *e, jobject o){
 
 
 #include <chrono>
-
+std::ostringstream ss;
 void main_loop() {
 	TranslatedGraphicsFunction *tgf = new tgf_gles();
 	//egl env 
-	EGLDisplay mEglDisplay = NULL;
-	EGLSurface mEglSurface = NULL;
-	EGLConfig mEglConfig = NULL;
-	EGLContext mEglContext = NULL;
+	EGLDisplay mEglDisplay = 0;
+	EGLSurface mEglSurface = 0;
+	EGLConfig mEglConfig = 0;
+	EGLContext mEglContext = 0;
 	unsigned long
-		frameStart = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count(),
-		lastFrameTime= std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count();
+		frameStart = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count(),
+		lastFrameTime= std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
 
 	try {
 		unsigned char eglDestroyRequest = 0;
@@ -107,11 +121,12 @@ void main_loop() {
 			{
 				//guard l bool function state
 				std::unique_lock<std::mutex> u_lck(mtx);
+				mtx_guard.lock();
 				// render notify
 				if (wantRender) {
 					rendered = false;
 					wantRender = false;
-					mtx.notify_all();
+					cv.notify_all();
 				}
 				if (rendered)
 					wantRender = true;
@@ -119,14 +134,16 @@ void main_loop() {
 				if (mEglSurface && (eglDestroyRequest > 0 || !hasSurface)) {
 					eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 					if (!eglDestroySurface(mEglDisplay, mEglSurface)) {
-						std::ostringstream ss;
+						ss.str("");
+						ss.clear();
     						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 						throw (ss.str());
 					}
-					mEglSurface = NULL;
+					mEglSurface = 0;
 					if (mEglContext && (eglDestroyRequest > 1)) {
 						if (!eglDestroyContext(mEglDisplay, mEglContext)) {
-							std::ostringstream ss;
+							ss.str("");
+							ss.clear();
     							ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 							throw (ss.str());
 						}
@@ -153,7 +170,8 @@ void main_loop() {
 					resume = false;
 					lrunning = true;
 				}
-				mtx.notify_all();
+				mtx_guard.unlock();
+				cv.notify_all();
 				// Ready to draw?
 				if (!lrunning || !hasSurface) {
 					cv.wait(u_lck);
@@ -161,31 +179,36 @@ void main_loop() {
 				}
 			}
 			if (!mEglDisplay) {
-				unsigned int temp[2]; // for chaching value output
+				EGLint temp[2]; // for chaching value output
 
 				mEglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 				if (mEglDisplay == EGL_NO_DISPLAY || !mEglDisplay) {
-					mEglDisplay = null;
-					std::ostringstream ss;
+					mEglDisplay = NULL;
+					ss.str("");
+					ss.clear();
     					ss << "eglGetDisplay failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 					throw (ss.str());
 				}
-				if (eglInitialize(mEglDisplay, temp, 0, temp, 1))
-					ALOGV("version EGL " + temp[0] + "." + temp[1]);
-				else {
-					std::ostringstream ss;
+				if (eglInitialize(mEglDisplay, &temp[0], &temp[1])) {
+					ss.str("");
+					ss.clear();
+					ss << "version EGL " << temp[0] << "." << temp[1];
+					ALOGV(ss.str());
+				} else {
+					ss.str("");
+					ss.clear();
     					ss << "eglInitialize failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 					throw (ss.str());
 				}
 				if (!mEglConfig) {
 					// choose best config
-					unsigned int s_configAttribs2[3] = {EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER, EGL_NONE };
-					eglChooseConfig(mEglDisplay, s_configAttribs2, 0, null, 0, 0, temp, 0);
-					if (!temp[0])
+					const EGLint s_configAttribs2[3] = {EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER, EGL_NONE};
+					eglChooseConfig(mEglDisplay, &s_configAttribs2[0], nullptr, 0, temp);
+					if (temp[0] == 0)
 						throw ("No configs match with configSpec");
 					const unsigned int j = temp[0];
 					EGLConfig configs[j];
-					eglChooseConfig(mEglDisplay, s_configAttribs2, 0, configs, 0, configs.length, temp, 0);
+					eglChooseConfig(mEglDisplay, &s_configAttribs2[0], &configs[0], j, nullptr);
 					int lastSc = -1, curSc;
 					mEglConfig = configs[0];
 					for (EGLConfig config : configs) {
@@ -193,15 +216,16 @@ void main_loop() {
 						// alpha should 0
 						// choose higher depth, stencil, color buffer(rgba)
 						curSc = -1;
-						for (int attr : {EGL_RENDERABLE_TYPE, EGL_BUFFER_SIZE, EGL_ALPHA_SIZE, EGL_DEPTH_SIZE, EGL_STENCIL_SIZE}) {
-							if (eglGetConfigAttrib(mEglDisplay, config, attr, temp, 0)) {
+						for (EGLint attr : {EGL_RENDERABLE_TYPE, EGL_BUFFER_SIZE, EGL_ALPHA_SIZE, EGL_DEPTH_SIZE, EGL_STENCIL_SIZE}) {
+							if (eglGetConfigAttrib(mEglDisplay, config, attr, &temp[0])) {
 								if (attr == EGL_ALPHA_SIZE)
-								temp[0] *= -1;
+									temp[0] *= -1;
 								curSc += temp[0];
 							} else {
-								int error;
+								EGLint error;
 								while ((error = eglGetError()) != EGL_SUCCESS) {
-									std::ostringstream ss;
+									ss.str("");
+									ss.clear();
     									ss << "eglConfigAttribute failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
 									throw (ss.str());
 								}
@@ -216,24 +240,27 @@ void main_loop() {
 			}
 			if (newContext || !mEglSurface) {
 				if (newContext) {
-					unsigned int attrib_list[3] = {EGL_CONTEXT_CLIENT_VERSION, mayorV, EGL_NONE};
-					mEglContext = eglCreateContext(mEglDisplay, mEglConfig, EGL_NO_CONTEXT, attrib_list, 0);
+					const EGLint attrib_list[3] = {EGL_CONTEXT_CLIENT_VERSION, 3 /* may use variables*/, EGL_NONE};
+					mEglContext = eglCreateContext(mEglDisplay, mEglConfig, EGL_NO_CONTEXT, attrib_list);
 					if (!mEglContext || mEglContext == EGL_NO_CONTEXT) {
 						mEglContext = NULL;
-						std::ostringstream ss;
+						ss.str("");
+						ss.clear();
     						ss << "createContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 						throw (ss.str());
 					}
 				}
-				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, holder, null, 0);
+				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, holder, nullptr);
 				if (!mEglSurface || mEglSurface == EGL_NO_SURFACE) {
 					mEglSurface = NULL;
-					std::ostringstream ss;
+					ss.str("");
+					ss.clear();
     					ss << "Create EGL Surface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 					throw (ss.str());
 				}
 				if (!eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext)) {
-					std::ostringstream ss;
+					ss.str("");
+					ss.clear();
     					ss << "Make EGL failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 					throw (ss.str());
 				}
@@ -242,7 +269,7 @@ void main_loop() {
 
 					Main::resize(width, height);
 					lresize = false;
-					lastFrameTime = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count();
+					lastFrameTime = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
 					newContext = false;
 				}
 			}
@@ -251,7 +278,7 @@ void main_loop() {
 				eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
 				Main::resize(width, height);
 			}
-			unsigned long time = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count();
+			unsigned long time = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
 			
 			if (lresume) {
 				Main::resume();
@@ -286,12 +313,14 @@ void main_loop() {
 					eglDestroyRequest |= 1;
 					break;
 				case EGL_BAD_NATIVE_WINDOW:
-					std::ostringstream ss;
+					ss.str("");
+					ss.clear();
     					ss << "eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" << std::this_thread::get_id();
 					throw (ss.str());
 					break;
 				default:
-					std::ostringstream ss;
+					ss.str("");
+					ss.clear();
     					ss << "eglSwapBuffers failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
 					throw (ss.str());
 					break;
