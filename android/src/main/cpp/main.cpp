@@ -182,7 +182,7 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
 					ss << "version EGL " << temp[0] << "." << temp[1];
-					ALOGV(ss.str().c_str().c_str());
+					ALOGV("%s", ss.str().c_str());
 				} else {
 					ss.str("");
 					ss.clear();
