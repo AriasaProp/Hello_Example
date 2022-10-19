@@ -1,8 +1,6 @@
 #include "mainListener.h"
 #include "translated_opengles.h"
 
-void main_loop();
-
 #include <android/log.h>
 
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), throw ("Error print!")
@@ -35,66 +33,10 @@ float deltaTime = 0;
 ANativeWindow *window = nullptr;
 
 
-JEx(void, onstart) (JNIEnv *e, jobject o){
-	mthread = new std::thread(main_loop);
-}
-
-JEx(void, onresume) (JNIEnv *e, jobject o){
-	mtx_guard.lock();
-	resume = true;
-	cv.notify_all();
-	mtx_guard.unlock();
-}
-
-JEx(void, surfacecreated) (JNIEnv *e, jobject o, jobject surf){
-	window = ANativeWindow_fromSurface(e, surf);
-}
-
-JEx(void, surfacechanged) (JNIEnv *e, jobject o, jobject surf, jint w, jint h){
-	mtx_guard.lock();
-	std::unique_lock<std::mutex> u_lck(mtx);
-	width = w;
-	height = h;
-	resize = true;
-	cv.notify_all();
-	while (!mExited && rendered)
-		cv.wait(u_lck);
-	mtx_guard.unlock();
-}
-
-JEx(void, surfacedestroyed) (JNIEnv *e, jobject o, jobject surf){
-	mtx_guard.lock();
-	ANativeWindow_release(window);
-	window = nullptr;
-	cv.notify_all();
-	mtx_guard.unlock();
-}
-
-JEx(void, onpause) (JNIEnv *e, jobject o, jboolean _finish){
-	mtx_guard.lock();
-	std::unique_lock<std::mutex> u_lck(mtx);
-	pause = true;
-	rendered = true;
-	cv.notify_all();
-	while (!mExited && rendered)
-		cv.wait(u_lck);
-	if (!_finish) return;
-	destroy = true;
-	cv.notify_all();
-	while (!mExited)
-		cv.wait(u_lck);
-	mtx_guard.unlock();
-}
-
-JEx(void, onstop) (JNIEnv *e, jobject o){
-	if (mthread->joinable())
-		mthread->join();
-	delete mthread;
-}
-
-
 #include <chrono>
+
 std::ostringstream ss;
+
 void main_loop() {
 	TranslatedGraphicsFunction *tgf = new tgf_gles();
 	//egl env 
@@ -342,6 +284,66 @@ void main_loop() {
 	
 	delete tgf;
 }
+
+
+
+JEx(void, onstart) (JNIEnv *e, jobject o){
+	mthread = new std::thread(main_loop);
+}
+
+JEx(void, onresume) (JNIEnv *e, jobject o){
+	mtx_guard.lock();
+	resume = true;
+	cv.notify_all();
+	mtx_guard.unlock();
+}
+
+JEx(void, surfacecreated) (JNIEnv *e, jobject o, jobject surf){
+	window = ANativeWindow_fromSurface(e, surf);
+}
+
+JEx(void, surfacechanged) (JNIEnv *e, jobject o, jobject surf, jint w, jint h){
+	mtx_guard.lock();
+	std::unique_lock<std::mutex> u_lck(mtx);
+	width = w;
+	height = h;
+	resize = true;
+	cv.notify_all();
+	while (!mExited && rendered)
+		cv.wait(u_lck);
+	mtx_guard.unlock();
+}
+
+JEx(void, surfacedestroyed) (JNIEnv *e, jobject o, jobject surf){
+	mtx_guard.lock();
+	ANativeWindow_release(window);
+	window = nullptr;
+	cv.notify_all();
+	mtx_guard.unlock();
+}
+
+JEx(void, onpause) (JNIEnv *e, jobject o, jboolean _finish){
+	mtx_guard.lock();
+	std::unique_lock<std::mutex> u_lck(mtx);
+	pause = true;
+	rendered = true;
+	cv.notify_all();
+	while (!mExited && rendered)
+		cv.wait(u_lck);
+	if (!_finish) return;
+	destroy = true;
+	cv.notify_all();
+	while (!mExited)
+		cv.wait(u_lck);
+	mtx_guard.unlock();
+}
+
+JEx(void, onstop) (JNIEnv *e, jobject o){
+	if (mthread->joinable())
+		mthread->join();
+	delete mthread;
+}
+
 
 
 
