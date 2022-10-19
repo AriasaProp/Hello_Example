@@ -65,7 +65,6 @@ JEx(void, surfacechanged) (JNIEnv *e, jobject o, jobject surf, jint w, jint h){
 JEx(void, surfacedestroyed) (JNIEnv *e, jobject o, jobject surf){
 	mtx_guard.lock();
 	ANativeWindow_release(window);
-	delete window;
 	window = nullptr;
 	cv.notify_all();
 	mtx_guard.unlock();
