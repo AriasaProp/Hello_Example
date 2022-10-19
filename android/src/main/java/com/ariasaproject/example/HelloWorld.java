@@ -82,7 +82,7 @@ public class HelloWorld extends Activity implements Callback {
     @Override
     protected void onResume() {
         super.onResume();
-	onresum();
+	onresume();
     }
 
     private final native void onpause(boolean finish);
