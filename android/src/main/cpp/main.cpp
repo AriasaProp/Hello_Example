@@ -1,12 +1,11 @@
 #include "mainListener.h"
 #include "translated_opengles.h"
 
-#include <jni.h>
-#include <native_window_jni.h>
-
 void main_loop();
 
 #include <android/log.h>
+#include <android/native_window_jni.h>
+
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), \
 			throw ("Error print!")
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Hello_Activity", __VA_ARGS__)
