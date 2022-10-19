@@ -91,13 +91,13 @@ JEx(void, onstop) (JNIEnv *e, jobject o){
 void main_loop() {
 	TranslatedGraphicsFunction *tgf = new tgf_gles();
 	//egl env 
-	EGLDisplay *mEglDisplay = nullptr;
-	EGLSurface *mEglSurface = nullptr;
-	EGLConfig *mEglConfig = nullptr;
-	EGLContext *mEglContext = nullptr;
+	EGLDisplay mEglDisplay = NULL;
+	EGLSurface mEglSurface = NULL;
+	EGLConfig mEglConfig = NULL;
+	EGLContext mEglContext = NULL;
 	unsigned long
-		frameStart = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).count(),
-		lastFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).count();
+		frameStart = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count(),
+		lastFrameTime= std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count();
 
 	try {
 		unsigned char eglDestroyRequest = 0;
@@ -123,18 +123,18 @@ void main_loop() {
     						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 						throw (ss.str());
 					}
-					mEglSurface = nullptr;
+					mEglSurface = NULL;
 					if (mEglContext && (eglDestroyRequest > 1)) {
 						if (!eglDestroyContext(mEglDisplay, mEglContext)) {
 							std::ostringstream ss;
     							ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 							throw (ss.str());
 						}
-						mEglContext = nullptr;
+						mEglContext = NULL;
 						newContext = true;
 						if (mEglDisplay && (eglDestroyRequest > 3)) {
 							eglTerminate(mEglDisplay);
-							mEglDisplay = nullptr;
+							mEglDisplay = NULL;
 						}
 					}
 					eglDestroyRequest = 0;
@@ -187,7 +187,7 @@ void main_loop() {
 					EGLConfig configs[j];
 					eglChooseConfig(mEglDisplay, s_configAttribs2, 0, configs, 0, configs.length, temp, 0);
 					int lastSc = -1, curSc;
-					*mEglConfig = configs[0];
+					mEglConfig = configs[0];
 					for (EGLConfig config : configs) {
 						temp[0] = -1;
 						// alpha should 0
@@ -209,7 +209,7 @@ void main_loop() {
 						}
 						if (curSc > lastSc) {
 							lastSc = curSc;
-							*mEglConfig = config;
+							mEglConfig = config;
 						}
 					}
 				}
@@ -219,7 +219,7 @@ void main_loop() {
 					unsigned int attrib_list[3] = {EGL_CONTEXT_CLIENT_VERSION, mayorV, EGL_NONE};
 					mEglContext = eglCreateContext(mEglDisplay, mEglConfig, EGL_NO_CONTEXT, attrib_list, 0);
 					if (!mEglContext || mEglContext == EGL_NO_CONTEXT) {
-						mEglContext = nullptr;
+						mEglContext = NULL;
 						std::ostringstream ss;
     						ss << "createContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 						throw (ss.str());
@@ -227,7 +227,7 @@ void main_loop() {
 				}
 				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, holder, null, 0);
 				if (!mEglSurface || mEglSurface == EGL_NO_SURFACE) {
-					mEglSurface = nullptr;
+					mEglSurface = NULL;
 					std::ostringstream ss;
     					ss << "Create EGL Surface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
 					throw (ss.str());
@@ -242,7 +242,7 @@ void main_loop() {
 
 					Main::resize(width, height);
 					lresize = false;
-					lastFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).count();
+					lastFrameTime = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count();
 					newContext = false;
 				}
 			}
@@ -251,9 +251,8 @@ void main_loop() {
 				eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
 				Main::resize(width, height);
 			}
-
-			unsigned long time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).count();
-
+			unsigned long time = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now())).count();
+			
 			if (lresume) {
 				Main::resume();
 				time = frameStart = lastFrameTime = 0;
@@ -308,15 +307,15 @@ void main_loop() {
 		if (mEglSurface) {
 			eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 			eglDestroySurface(mEglDisplay, mEglSurface);
-			mEglSurface = nullptr;
+			mEglSurface = NULL;
 		}
 		if (mEglContext) {
 			eglDestroyContext(mEglDisplay, mEglContext);
-			mEglContext = nullptr;
+			mEglContext = NULL;
 		}
 		if (mEglDisplay) {
 			eglTerminate(mEglDisplay);
-			mEglDisplay = nullptr;
+			mEglDisplay = NULL;
 		}
 		// end thread
 		synchronized (this) {
