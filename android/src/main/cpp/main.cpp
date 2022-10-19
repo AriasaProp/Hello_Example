@@ -129,7 +129,7 @@ void main_loop() {
 						ss.str("");
 						ss.clear();
     						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-						ALOGE(ss.str().c_str());
+						ALOGE("%s", ss.str());
 					}
 					mEglSurface = 0;
 					if (mEglContext && (eglDestroyRequest > 1)) {
@@ -137,7 +137,7 @@ void main_loop() {
 							ss.str("");
 							ss.clear();
     							ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-							ALOGE(ss.str().c_str());
+							ALOGE("%s", ss.str());
 						}
 						mEglContext = NULL;
 						newContext = true;
@@ -178,7 +178,7 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglGetDisplay failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE(ss.str().c_str());
+					ALOGE("%s", ss.str());
 				}
 				if (eglInitialize(mEglDisplay, &temp[0], &temp[1])) {
 					ss.str("");
@@ -189,7 +189,7 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglInitialize failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE(ss.str().c_str());
+					ALOGE("%s", ss.str());
 				}
 				if (!mEglConfig) {
 					// choose best config
@@ -218,7 +218,7 @@ void main_loop() {
 									ss.str("");
 									ss.clear();
     									ss << "eglConfigAttribute failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
-									ALOGE(ss.str().c_str());
+									ALOGE("%s", ss.str());
 								}
 							}
 						}
@@ -238,7 +238,7 @@ void main_loop() {
 						ss.str("");
 						ss.clear();
     						ss << "createContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-						ALOGE(ss.str().c_str());
+						ALOGE("%s", ss.str());
 					}
 				}
 				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, window, nullptr);
@@ -247,13 +247,13 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "Create EGL Surface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE(ss.str().c_str());
+					ALOGE("%s", ss.str());
 				}
 				if (!eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext)) {
 					ss.str("");
 					ss.clear();
     					ss << "Make EGL failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					ALOGE(ss.str().c_str());
+					ALOGE("%s", ss.str());
 				}
 				if (newContext) {
 					Main::create(tgf);
@@ -313,36 +313,35 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglSwapBuffers failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
-					ALOGE(ss.str().c_str());
+					ALOGE("%s", ss.str());
 					break;
 			}
 		}
 		frames++;
 	} catch (...) {
 		ALOGE("fall thru error!");
-	} finally {
-		// dispose all resources
-		Main::destroy();
-
-		if (mEglSurface) {
-			eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-			eglDestroySurface(mEglDisplay, mEglSurface);
-			mEglSurface = NULL;
-		}
-		if (mEglContext) {
-			eglDestroyContext(mEglDisplay, mEglContext);
-			mEglContext = NULL;
-		}
-		if (mEglDisplay) {
-			eglTerminate(mEglDisplay);
-			mEglDisplay = NULL;
-		}
-		// end thread
-		synchronized (this) {
-			mExited = true;
-			cv.notify_all();
-		}
 	}
+	// dispose all resources
+	Main::destroy();
+	if (mEglSurface) {
+		eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+		eglDestroySurface(mEglDisplay, mEglSurface);
+		mEglSurface = NULL;
+	}
+	if (mEglContext) {
+		eglDestroyContext(mEglDisplay, mEglContext);
+		mEglContext = NULL;
+	}
+	if (mEglDisplay) {
+		eglTerminate(mEglDisplay);
+		mEglDisplay = NULL;
+	}
+	// end thread
+	mtx_guard.lock();
+	mExited = true;
+	cv.notify_all();
+	mtx_guard.unlock();
+	
 	delete tgf;
 }
 
