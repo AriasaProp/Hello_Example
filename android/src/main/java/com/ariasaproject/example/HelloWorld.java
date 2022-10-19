@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Random;
 
 //AndroidApplication include graphics and Application
-public class HelloWorld extends Activity implements Runnable, Callback {
+public class HelloWorld extends Activity implements Callback {
     public static final String TAG = "MainActivity";
 
     static {
