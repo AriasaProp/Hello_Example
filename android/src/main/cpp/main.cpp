@@ -97,13 +97,12 @@ void main_loop() {
 	EGLSurface mEglSurface;
 	EGLConfig mEglConfig = nullptr;
 	EGLContext mEglContext;
-	long frameStart = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count(),
-		lastFrameTime= std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+	long frameStart = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
+	long lastFrameTime= std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
 
 	try {
 		unsigned char eglDestroyRequest = 0;
-		bool wantRender = false, newContext = true, 
-			created = false, lrunning = false, lresize = false, lresume = false, lpause = false;
+		bool wantRender = false, newContext = true, created = false, lrunning = false, lresize = false, lresume = false, lpause = false;
 		while (!destroy) {
 			//guard l bool function state
 			std::unique_lock<std::mutex> u_lck(mtx);
@@ -190,9 +189,8 @@ void main_loop() {
 					eglChooseConfig(mEglDisplay, &s_configAttribs2[0], nullptr, 0, temp);
 					if (temp[0] == 0)
 						throw ("No configs match with configSpec");
-					const unsigned int j = temp[0];
-					EGLConfig configs[j];
-					eglChooseConfig(mEglDisplay, &s_configAttribs2[0], &configs[0], j, nullptr);
+					EGLConfig configs[temp[0]];
+					eglChooseConfig(mEglDisplay, &s_configAttribs2[0], &configs[0], temp[0], nullptr);
 					int lastSc = -1, curSc;
 					mEglConfig = configs[0];
 					for (EGLConfig config : configs) {
@@ -249,8 +247,10 @@ void main_loop() {
 					ALOGE("%s", ss.str().c_str());
 				}
 				if (newContext) {
-					Main::create(tgf);
-
+					if(!created) {
+						Main::create(tgf);
+						created = true;
+					}
 					Main::resize(width, height);
 					lresize = false;
 					lastFrameTime = std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now()).time_since_epoch().count();
