@@ -71,10 +71,16 @@ public class HelloWorld extends Activity implements Runnable, Callback {
         ConfigurationInfo configurationInfo = activityManager.getDeviceConfigurationInfo();
         this.mayorV = (short) (configurationInfo.reqGlEsVersion >> 16);
         this.minorV = (short) (configurationInfo.reqGlEsVersion & 0x0000ffff);
-        this.holder = view.getHolder();
+        holder = view.getHolder();
         
         mainTGFThread = new Thread(this, "GLThread");
         mainTGFThread.start();
+    }
+    
+    @Override
+    protected synchronized void onStart() {
+    		super.onStart();
+        holder.addCallback(this);
     }
 
     @Override
@@ -142,6 +148,12 @@ public class HelloWorld extends Activity implements Runnable, Callback {
         notifyAll();
     }
     
+    @Override
+    protected synchronized void onStop() {
+    		holder.removeCallback(this);
+    		super.onStop();
+    }
+    
     
 		private final native void create();
 		private final native void resume();
@@ -149,31 +161,11 @@ public class HelloWorld extends Activity implements Runnable, Callback {
 		private final native void render(float d);
 		private final native void pause();
 		private final native void destroy();
-		/*
-		public void create() {
-			recreate();
-		}
-		public void recreate() {
-			GLES30.glClearColor(1, 1, 0, 1); 
-		}
-		public void resize(int w, int h) {}
-		public void resume() {
-		}
-		public void render(float d) {
-			GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT | GLES30.GL_DEPTH_BUFFER_BIT | GLES30.GL_STENCIL_BUFFER_BIT );
-		}
-		public void pause() {
-			GLES30.glClearColor(1, 0, 1, 1); 
-		}
-		public void destroy() {}
-		*/
     
 
     // main loop
     @Override
     public void run() {
-        holder.addCallback(this);
-
         EGLDisplay mEglDisplay = null;
         EGLSurface mEglSurface = null;
         EGLConfig mEglConfig = null;
@@ -380,7 +372,6 @@ public class HelloWorld extends Activity implements Runnable, Callback {
                 mExited = true;
                 notifyAll();
             }
-            holder.removeCallback(this);
         }
     }
 }
