@@ -311,8 +311,6 @@ void main_loop() {
 			}
 		}
 		frames++;
-	} catch (...) {
-		ALOGE("fall thru error!");
 	}
 	// dispose all resources
 	Main::destroy();
