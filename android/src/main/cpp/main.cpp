@@ -4,15 +4,14 @@
 void main_loop();
 
 #include <android/log.h>
-#include <android/native_window_jni.h>
 
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), throw ("Error print!")
 
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Hello_Activity", __VA_ARGS__)
 
 
-#define JEx(R, M) extern "C" JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M
 #include <EGL/egl.h>
+#include <android/native_window_jni.h>
 #include <thread>
 #include <condition_variable>
 #include <mutex>
@@ -20,6 +19,8 @@ void main_loop();
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+
+#define JEx(R, M) extern "C" JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M
 
 std::condition_variable cv;
 std::mutex mtx;
