@@ -15,6 +15,9 @@ void main_loop();
 #include <thread>
 #include <condition_variable>
 #include <mutex>
+#include <sstream>
+#include <cstring>
+#include <iomanip>
 #include <iostream>
 
 std::condition_variable cv;
@@ -116,16 +119,16 @@ void main_loop() {
 				if (mEglSurface && (eglDestroyRequest > 0 || !hasSurface)) {
 					eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 					if (!eglDestroySurface(mEglDisplay, mEglSurface)) {
-						char out_hex[20];
-						std::sprintf(out_hex, "%X", eglGetError());
-						throw ("eglDestroySurface failed: " + out_hex);
+						std::ostringstream ss;
+    						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+						throw (ss.str());
 					}
 					mEglSurface = nullptr;
 					if (mEglContext && (eglDestroyRequest > 1)) {
 						if (!eglDestroyContext(mEglDisplay, mEglContext)) {
-							char out_hex[20];
-							std::sprintf(out_hex, "%X", eglGetError());
-							throw ("eglDestroyContext failed: " + out_hex);
+							std::ostringstream ss;
+    							ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+							throw (ss.str());
 						}
 						mEglContext = nullptr;
 						newContext = true;
@@ -163,28 +166,28 @@ void main_loop() {
 				mEglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 				if (mEglDisplay == EGL_NO_DISPLAY || !mEglDisplay) {
 					mEglDisplay = null;
-					char out_hex[20];
-					std::sprintf(out_hex, "%X", eglGetError());
-                        		throw ("eglGetDisplay failed " + out_hex);
+					std::ostringstream ss;
+    					ss << "eglGetDisplay failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+					throw (ss.str());
 				}
 				if (eglInitialize(mEglDisplay, temp, 0, temp, 1))
 					ALOGV("version EGL " + temp[0] + "." + temp[1]);
 				else {
-					char out_hex[20];
-					std::sprintf(out_hex, "%X", eglGetError());
-					throw ("eglInitialize failed : " + out_hex);
+					std::ostringstream ss;
+    					ss << "eglInitialize failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+					throw (ss.str());
 				}
 				if (!mEglConfig) {
 					// choose best config
 					unsigned int s_configAttribs2[3] = {EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER, EGL_NONE };
 					eglChooseConfig(mEglDisplay, s_configAttribs2, 0, null, 0, 0, temp, 0);
-					if (temp[0] <= 0)
+					if (!temp[0])
 						throw ("No configs match with configSpec");
 					const unsigned int j = temp[0];
 					EGLConfig configs[j];
 					eglChooseConfig(mEglDisplay, s_configAttribs2, 0, configs, 0, configs.length, temp, 0);
 					int lastSc = -1, curSc;
-					mEglConfig = configs[0];
+					*mEglConfig = configs[0];
 					for (EGLConfig config : configs) {
 						temp[0] = -1;
 						// alpha should 0
@@ -198,15 +201,15 @@ void main_loop() {
 							} else {
 								int error;
 								while ((error = eglGetError()) != EGL_SUCCESS) {
-									char out_hex[20];
-									std::sprintf(out_hex, "%X", error);
-									ALOGE("EglConfigAttribute failed: " + out_hex);
+									std::ostringstream ss;
+    									ss << "eglConfigAttribute failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
+									throw (ss.str());
 								}
 							}
 						}
 						if (curSc > lastSc) {
 							lastSc = curSc;
-							mEglConfig = config;
+							*mEglConfig = config;
 						}
 					}
 				}
@@ -216,23 +219,23 @@ void main_loop() {
 					unsigned int attrib_list[3] = {EGL_CONTEXT_CLIENT_VERSION, mayorV, EGL_NONE};
 					mEglContext = eglCreateContext(mEglDisplay, mEglConfig, EGL_NO_CONTEXT, attrib_list, 0);
 					if (!mEglContext || mEglContext == EGL_NO_CONTEXT) {
-						mEglContext = null;
-						char out_hex[20];
-						std::sprintf(out_hex, "%X", eglGetError());
-						throw ("createContext failed: " + out_hex);
+						mEglContext = nullptr;
+						std::ostringstream ss;
+    						ss << "createContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+						throw (ss.str());
 					}
 				}
 				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, holder, null, 0);
 				if (!mEglSurface || mEglSurface == EGL_NO_SURFACE) {
-					mEglSurface = null;
-					char out_hex[20];
-					std::sprintf(out_hex, "%X", eglGetError());
-					throw ("Create EGL Surface failed: " + out_hex);
+					mEglSurface = nullptr;
+					std::ostringstream ss;
+    					ss << "Create EGL Surface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+					throw (ss.str());
 				}
 				if (!eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext)) {
-					char out_hex[20];
-					std::sprintf(out_hex, "%X", eglGetError());
-					throw ("Make EGL failed: " + out_hex);
+					std::ostringstream ss;
+    					ss << "Make EGL failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
+					throw (ss.str());
 				}
 				if (newContext) {
 					Main::create(tgf);
@@ -271,7 +274,7 @@ void main_loop() {
 				eglDestroyRequest |= 1;
 			}
 			if (!eglSwapBuffers(mEglDisplay, mEglSurface)) {
-				int error = eglGetError();
+				unsigned int error = eglGetError();
 				switch (error) {
 				case EGL_BAD_DISPLAY:
 					eglDestroyRequest |= 4;
@@ -284,18 +287,19 @@ void main_loop() {
 					eglDestroyRequest |= 1;
 					break;
 				case EGL_BAD_NATIVE_WINDOW:
-					ALOGE("eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" + Thread.currentThread().getId());
+					std::ostringstream ss;
+    					ss << "eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" << std::this_thread::get_id();
+					throw (ss.str());
 					break;
-				default: {
-					char out_hex[20];
-					std::sprintf(out_hex, "%X", error);
-					ALOGE("eglSwapBuffers failed: " + out_hex);
+				default:
+					std::ostringstream ss;
+    					ss << "eglSwapBuffers failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
+					throw (ss.str());
 					break;
-				}
 			}
 		}
 		frames++;
-	} catch (const char *err) {
+	} catch (std::string err) {
 		ALOGE(err);
 	} finally {
 		// dispose all resources
