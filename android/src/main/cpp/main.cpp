@@ -1,13 +1,6 @@
 #include "mainListener.h"
 #include "translated_opengles.h"
-
 #include <android/log.h>
-
-#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), throw ("Error print!")
-
-#define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Hello_Activity", __VA_ARGS__)
-
-
 #include <EGL/egl.h>
 #include <android/native_window_jni.h>
 #include <thread>
@@ -17,6 +10,11 @@
 #include <cstring>
 #include <iomanip>
 #include <iostream>
+#include <chrono>
+
+
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), throw ("Error print!")
+#define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Hello_Activity", __VA_ARGS__)
 
 #define JEx(R, M) extern "C" JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M
 
@@ -25,7 +23,7 @@ std::mutex mtx;
 std::mutex mtx_guard;
 std::thread *mthread = nullptr;
 
-int mayorV = 3, minorV = 0;
+EGLint mayorV = 3, minorV = 0;
 bool resume = false, pause = false, destroy = false, resize = false, rendered = false, mExited = false;
 EGLint width = 0, height = 0, format = 0;
 unsigned int frames = 0, fps = 0;
@@ -46,7 +44,7 @@ JEx(void, onresume) (JNIEnv *e, jobject o) {
 }
 
 JEx(void, surfacecreated) (JNIEnv *e, jobject o, jobject surf){
-	//window = ANativeWindow_fromSurface(e, surf);
+	window = ANativeWindow_fromSurface(e, surf);
 }
 
 JEx(void, surfacechanged) (JNIEnv *e, jobject o, jobject surf, jint w, jint h){
@@ -92,13 +90,10 @@ JEx(void, onstop) (JNIEnv *e, jobject o) {
 }
 
 
-#include <chrono>
-
 std::ostringstream ss;
 
 void main_loop() {
 	TranslatedGraphicsFunction *tgf = new tgf_gles();
-	//egl env 
 	EGLDisplay mEglDisplay = nullptr;
 	EGLSurface mEglSurface;
 	EGLConfig mEglConfig = nullptr;
@@ -341,7 +336,7 @@ void main_loop() {
 	cv.notify_all();
 	mtx_guard.unlock();
 	
-	delete tgf;
+	//delete tgf;
 }
 
 
