@@ -1,22 +1,18 @@
-//Native NDK Kit
-#include <native_activity.h>
-#include <native_window_jni.h>
-#include <rect.h>
-#include <surface_control.h>
-#include <window.h>
-//next then
 #include "mainListener.h"
 #include "translated_opengles.h"
+
+#include <jni.h>
+#include <native_window_jni.h>
 
 void main_loop();
 
 #include <android/log.h>
-#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__)
+#define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, "Hello_Activity", __VA_ARGS__), \
+			throw ("Error print!")
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, "Hello_Activity", __VA_ARGS__)
 
 
 #define JEx(R, M) extern "C" JNIEXPORT R JNICALL Java_com_ariasaproject_example_HelloWorld_##M
-
 #include <EGL/egl.h>
 #include <thread>
 #include <condition_variable>
@@ -32,10 +28,11 @@ std::mutex mtx_guard;
 std::thread *mthread = nullptr;
 
 int mayorV = 3, minorV = 0;
-bool resume = false, pause = false, destroy = false, resize = false, rendered = false, hasSurface = false, mExited = false;
-unsigned int width = 0, height = 0;
+bool resume = false, pause = false, destroy = false, resize = false, rendered = false, mExited = false;
+EGLint width = 0, height = 0, format = 0;
 unsigned int frames = 0, fps = 0;
 float deltaTime = 0;
+ANativeWindow *window = nullptr;
 
 
 JEx(void, onstart) (JNIEnv *e, jobject o){
@@ -49,18 +46,13 @@ JEx(void, onresume) (JNIEnv *e, jobject o){
 	mtx_guard.unlock();
 }
 
-JEx(void, surfacecreated) (JNIEnv *e, jobject o){
-	
-	
+JEx(void, surfacecreated) (JNIEnv *e, jobject o, jobject surf){
+	window = ANativeWindow_fromSurface(e, surf);
 }
 
-JEx(void, surfacechanged) (JNIEnv *e, jobject o, jint w, jint h){
+JEx(void, surfacechanged) (JNIEnv *e, jobject o, jobject surf, jint w, jint h){
 	mtx_guard.lock();
 	std::unique_lock<std::mutex> u_lck(mtx);
-	if (!hasSurface) {
-		rendered = true;
-		hasSurface = true;
-	}
 	width = w;
 	height = h;
 	resize = true;
@@ -70,9 +62,11 @@ JEx(void, surfacechanged) (JNIEnv *e, jobject o, jint w, jint h){
 	mtx_guard.unlock();
 }
 
-JEx(void, surfacedestroyed) (JNIEnv *e, jobject o){
+JEx(void, surfacedestroyed) (JNIEnv *e, jobject o, jobject surf){
 	mtx_guard.lock();
-	hasSurface = false;
+	ANativeWindow_release(window);
+	delete window;
+	window = nullptr;
 	cv.notify_all();
 	mtx_guard.unlock();
 }
@@ -105,10 +99,10 @@ std::ostringstream ss;
 void main_loop() {
 	TranslatedGraphicsFunction *tgf = new tgf_gles();
 	//egl env 
-	EGLDisplay mEglDisplay = 0;
-	EGLSurface mEglSurface = 0;
-	EGLConfig mEglConfig = 0;
-	EGLContext mEglContext = 0;
+	EGLDisplay mEglDisplay = nullptr;
+	EGLSurface mEglSurface;
+	EGLConfig mEglConfig = nullptr;
+	EGLContext mEglContext;
 	unsigned long
 		frameStart = std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count(),
 		lastFrameTime= std::chrono::duration<unsigned long, std::milli>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now())).count();
@@ -131,13 +125,13 @@ void main_loop() {
 				if (rendered)
 					wantRender = true;
 				// egl destroy request
-				if (mEglSurface && (eglDestroyRequest > 0 || !hasSurface)) {
+				if (mEglSurface && (eglDestroyRequest > 0 || !window)) {
 					eglMakeCurrent(mEglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 					if (!eglDestroySurface(mEglDisplay, mEglSurface)) {
 						ss.str("");
 						ss.clear();
     						ss << "eglDestroySurface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-						throw (ss.str());
+						ALOGE(ss.str());
 					}
 					mEglSurface = 0;
 					if (mEglContext && (eglDestroyRequest > 1)) {
@@ -145,7 +139,7 @@ void main_loop() {
 							ss.str("");
 							ss.clear();
     							ss << "eglDestroyContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-							throw (ss.str());
+							ALOGE(ss.str());
 						}
 						mEglContext = NULL;
 						newContext = true;
@@ -173,21 +167,20 @@ void main_loop() {
 				mtx_guard.unlock();
 				cv.notify_all();
 				// Ready to draw?
-				if (!lrunning || !hasSurface) {
+				if (!lrunning || !window) {
 					cv.wait(u_lck);
 					continue;
 				}
 			}
 			if (!mEglDisplay) {
 				EGLint temp[2]; // for chaching value output
-
 				mEglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
 				if (mEglDisplay == EGL_NO_DISPLAY || !mEglDisplay) {
 					mEglDisplay = NULL;
 					ss.str("");
 					ss.clear();
     					ss << "eglGetDisplay failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					throw (ss.str());
+					ALOGE(ss.str());
 				}
 				if (eglInitialize(mEglDisplay, &temp[0], &temp[1])) {
 					ss.str("");
@@ -198,7 +191,7 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglInitialize failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					throw (ss.str());
+					ALOGE(ss.str());
 				}
 				if (!mEglConfig) {
 					// choose best config
@@ -227,7 +220,7 @@ void main_loop() {
 									ss.str("");
 									ss.clear();
     									ss << "eglConfigAttribute failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
-									throw (ss.str());
+									ALOGE(ss.str());
 								}
 							}
 						}
@@ -247,7 +240,7 @@ void main_loop() {
 						ss.str("");
 						ss.clear();
     						ss << "createContext failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-						throw (ss.str());
+						ALOGE(ss.str());
 					}
 				}
 				mEglSurface = eglCreateWindowSurface(mEglDisplay, mEglConfig, holder, nullptr);
@@ -256,13 +249,13 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "Create EGL Surface failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					throw (ss.str());
+					ALOGE(ss.str());
 				}
 				if (!eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext)) {
 					ss.str("");
 					ss.clear();
     					ss << "Make EGL failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << eglGetError();
-					throw (ss.str());
+					ALOGE(ss.str());
 				}
 				if (newContext) {
 					Main::create(tgf);
@@ -316,18 +309,18 @@ void main_loop() {
 					ss.str("");
 					ss.clear();
     					ss << "eglSwapBuffers returned EGL_BAD_NATIVE_WINDOW. tid=" << std::this_thread::get_id();
-					throw (ss.str());
+					ALOGE(ss.str());
 					break;
 				default:
 					ss.str("");
 					ss.clear();
     					ss << "eglSwapBuffers failed: 0x" << std::setfill('0') << std::setw(8) << std::hex << error;
-					throw (ss.str());
+					ALOGE(ss.str());
 					break;
 			}
 		}
 		frames++;
-	} catch (std::string err) {
+	} catch (const char *err) {
 		ALOGE(err);
 	} finally {
 		// dispose all resources

@@ -93,25 +93,25 @@ public class HelloWorld extends Activity implements Callback {
 	super.onPause();
     }
 
-    private final native void surfacecreated();
+    private final native void surfacecreated(SurfaceHolder holder);
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        surfacecreated();
+        surfacecreated(holder);
     }
 
-    private final native void surfacechanged(int w, int h);
+    private final native void surfacechanged(SurfaceHolder holder, int w, int h);
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-	surfacechanged(w, h);
+	surfacechanged(holder, w, h);
     }
 
-    private final native void surfacedestroyed();
+    private final native void surfacedestroyed(SurfaceHolder holder);
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-	surfacedestroyed();
+	surfacedestroyed(holder);
     }
     
     private final native void onstop();
